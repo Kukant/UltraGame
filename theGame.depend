@@ -1,0 +1,22 @@
+# depslib dependency file v1.0
+1484487332 source:/home/zeusko/Desktop/c/UltraGame/main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<sys/time.h>
+	<SDL2/SDL.h>
+	<SDL2/SDL_image.h>
+	<SDL2/SDL_timer.h>
+	"theGame.h"
+
+1484487195 source:/home/zeusko/Desktop/c/UltraGame/functions.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<SDL2/SDL.h>
+	<SDL2/SDL_image.h>
+	<SDL2/SDL_timer.h>
+	"theGame.h"
+
+1484487322 /home/zeusko/Desktop/c/UltraGame/theGame.h
+
