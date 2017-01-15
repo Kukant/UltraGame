@@ -3,6 +3,8 @@
  *
  */
 
+ #include <SDL2/SDL_ttf.h>
+
  // macro definitions
 #define HEIGHT 540
 #define WIDTH 960
@@ -22,6 +24,7 @@ typedef struct{
     int y;
     bool walking, shooting, alive, facingLeft;
     int currentSprite;
+    int hp;
 
     SDL_Texture *sheetTexture;
 } Man;
@@ -36,16 +39,21 @@ typedef struct{
     Man *p_p1;
     Man *p_p2;
     Bullet *bullets;
+    bool gameIsOver;
 
     Action *action;
     SDL_Texture *bulletTexture;
+
+    int frames;
 
 } gameState;
 
 /**
  *  Function detects keyboard actions.
  */
-void eventsDetection(SDL_Event *event, Action *action, bool *running);
+void eventsDetection(SDL_Event *event, Action *action, bool *running, gameState *game);
 void renderStuff(SDL_Renderer *renderer, gameState game);
-void logicStuff(gameState game);
+void logicStuff(gameState game, gameState *p_game);
 int isInWindow(int x, int y);
+void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size);
+void initNewGame(gameState game);

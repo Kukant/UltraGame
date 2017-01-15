@@ -3,7 +3,7 @@
  *  Author: Tomas K.
  *
  *
- *  linker options: -std=c99 -lSDL2 -lSDL2_image
+ *  linker options: -std=c99 -lSDL2 -lSDL2_image -lSDL2_ttf
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +13,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "theGame.h"
 //#include "functions.c"
@@ -59,18 +60,12 @@ int main()
     for(int i = 0; i < MAXBULLETS; i++)
         bullets[i].display = false;
 
-    //test
-    bullets[0].display=true;
-    bullets[0].x = 160;
-    bullets[0].y = 160;
-    bullets[0].goingRight = true;
-
-
     // setting up the players
-    Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 };
-    Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 };
+    Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50};
+    Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50};
 
-    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets};
+    // gameState init
+    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false};
 
     // loading images
     SDL_Surface *sheet;
@@ -80,14 +75,10 @@ int main()
     if((sheet = IMG_Load("badman_sheet.png")) == NULL)
             printf("badman_sheet.png not found\n");
     player2.sheetTexture = SDL_CreateTextureFromSurface(renderer, sheet);
-    if((sheet = IMG_Load("bullet.png")) == NULL)
-            printf("bullet.png not found\n");
+    if((sheet = IMG_Load("banana.png")) == NULL)
+            printf("banana.png not found\n");
     game.bulletTexture = SDL_CreateTextureFromSurface(renderer, sheet);
     SDL_FreeSurface(sheet);
-
-    //test
-
-
 
     // Animation loop
     while(running)
@@ -95,17 +86,19 @@ int main()
         // events processing
         while(SDL_PollEvent(&event))
         {
-            eventsDetection(&event, p_action, &running);
+            eventsDetection(&event, p_action, &running, &game);
         }
 
         // logic stuff
-        logicStuff(game);
+        logicStuff(game, &game);
 
         // rendering
         renderStuff(renderer, game);
 
         // Show what was drawn
         SDL_RenderPresent(renderer);
+
+        game.frames = game.frames + 1;
 
     } // end of animation loop
 
