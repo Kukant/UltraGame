@@ -24,6 +24,9 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 		</Compiler>
+		<Linker>
+			<Add option="-std=c99 -lSDL2 -lSDL2_image -lSDL2_ttf" />
+		</Linker>
 		<Unit filename="functions.c">
 			<Option compilerVar="CC" />
 		</Unit>

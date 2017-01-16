@@ -16,13 +16,13 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "theGame.h"
-//#include "functions.c"
 
-#define HEIGHT 540
-#define WIDTH 960
+#define HEIGHT 1080 //540
+#define WIDTH 1920 //960
 #define SPEED 300
 #define BULLETSPEED 700
 #define MAXBULLETS 1000
+
 
 //************************************MAIN******************
 int main()
@@ -40,6 +40,9 @@ int main()
                                           HEIGHT,
                                           SDL_WINDOW_OPENGL
                                         );
+    // set window fullscreen
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+
     // create renderer
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
@@ -53,8 +56,6 @@ int main()
 
     bool running = true;
 
-    //SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT);
-
     // init bullets
     Bullet bullets[MAXBULLETS];
     for(int i = 0; i < MAXBULLETS; i++)
@@ -65,7 +66,7 @@ int main()
     Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50};
 
     // gameState init
-    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false};
+    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer};
 
     // loading images
     SDL_Surface *sheet;
@@ -86,7 +87,7 @@ int main()
         // events processing
         while(SDL_PollEvent(&event))
         {
-            eventsDetection(&event, p_action, &running, &game);
+            eventsDetection(&event, p_action, &running, &game, window);
         }
 
         // logic stuff
@@ -99,6 +100,8 @@ int main()
         SDL_RenderPresent(renderer);
 
         game.frames = game.frames + 1;
+
+
 
     } // end of animation loop
 

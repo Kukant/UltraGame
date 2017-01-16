@@ -13,7 +13,7 @@
 
 #include "theGame.h"
 
-void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameState *game)
+void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameState *game, SDL_Window *window)
 {
     switch(event->type)
             {
@@ -66,7 +66,9 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                         case SDL_SCANCODE_RETURN:
                             initNewGame(*game);
                             break;
-
+                        case SDL_SCANCODE_Q:
+                            *running = false;
+                            break;
 
                     }
                     break;
@@ -295,7 +297,7 @@ void logicStuff(gameState game, gameState *p_game)
     else
         game.p_p2->shooting = false;
 
-    if(game.p_p1->hp <= 0 || game.p_p2->hp <= 0 && !game.gameIsOver)
+    if((game.p_p1->hp <= 0 || game.p_p2->hp <= 0) && !game.gameIsOver)
         p_game->gameIsOver = true;
 
 }

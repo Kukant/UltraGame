@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1484521505 source:/home/zeusko/Desktop/c/UltraGame/main.c
+1484527305 source:/home/zeusko/Desktop/c/UltraGame/main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
@@ -10,7 +10,7 @@
 	<SDL2/SDL_ttf.h>
 	"theGame.h"
 
-1484522948 source:/home/zeusko/Desktop/c/UltraGame/functions.c
+1484527939 source:/home/zeusko/Desktop/c/UltraGame/functions.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
@@ -20,6 +20,6 @@
 	<SDL2/SDL_ttf.h>
 	"theGame.h"
 
-1484521505 /home/zeusko/Desktop/c/UltraGame/theGame.h
+1484527277 /home/zeusko/Desktop/c/UltraGame/theGame.h
 	<SDL2/SDL_ttf.h>
 

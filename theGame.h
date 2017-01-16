@@ -1,17 +1,16 @@
 /**
  *  Header file for theGame.
  *
- */
 
+ */
  #include <SDL2/SDL_ttf.h>
 
  // macro definitions
-#define HEIGHT 540
-#define WIDTH 960
+#define HEIGHT 1080 //540
+#define WIDTH 1920 //960
 #define SPEED 300
 #define MAXBULLETS 1000
 #define BULLETSPEED 700
-
 
  // structs definitions
 typedef struct{
@@ -43,6 +42,7 @@ typedef struct{
 
     Action *action;
     SDL_Texture *bulletTexture;
+    SDL_Renderer *renderer;
 
     int frames;
 
@@ -51,7 +51,7 @@ typedef struct{
 /**
  *  Function detects keyboard actions.
  */
-void eventsDetection(SDL_Event *event, Action *action, bool *running, gameState *game);
+void eventsDetection(SDL_Event *event, Action *action, bool *running, gameState *game, SDL_Window *window);
 void renderStuff(SDL_Renderer *renderer, gameState game);
 void logicStuff(gameState game, gameState *p_game);
 int isInWindow(int x, int y);
