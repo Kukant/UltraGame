@@ -60,14 +60,20 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->left2 = true;
                             break;
 
-                        case SDL_SCANCODE_P:
+                        case SDL_SCANCODE_M:
                             p_action->p2Shooting = true;
                             break;
                         case SDL_SCANCODE_RETURN:
-                            initNewGame(*game);
+                            initNewGame(game);
                             break;
-                        case SDL_SCANCODE_Q:
+                        case SDL_SCANCODE_ESCAPE:
                             *running = false;
+                            break;
+                        case SDL_SCANCODE_U:
+                            game->p_p2->AI = true;
+                            break;
+                        case SDL_SCANCODE_I:
+                            game->p_p2->AI = false;
                             break;
 
                     }
@@ -196,22 +202,38 @@ void logicStuff(gameState game, gameState *p_game)
     // player2
     manVelX = 0;
     manVelY = 0;
-
-    if (game.action->up2 && !game.action->down2) manVelY = -SPEED;
-    if (!game.action->up2 && game.action->down2) manVelY = SPEED;
-    if (game.action->left2 && !game.action->right2)
+    if(game.p_p2->AI == false)
     {
-        manVelX = -SPEED;
-        game.p_p2->facingLeft = true;
+        if (game.action->up2 && !game.action->down2) manVelY = -SPEED;
+        if (!game.action->up2 && game.action->down2) manVelY = SPEED;
+        if (game.action->left2 && !game.action->right2)
+        {
+            manVelX = -SPEED;
+            game.p_p2->facingLeft = true;
+        }
+        if (game.action->right2 && !game.action->left2)
+        {
+            manVelX = SPEED;
+            game.p_p2->facingLeft = false;
+        }
     }
-    if (game.action->right2 && !game.action->left2)
-    {
-        manVelX = SPEED;
-        game.p_p2->facingLeft = false;
-    }
+    else
+        AI(&manVelX, &manVelY, game); //AI
 
     game.p_p2->x += (int)manVelX/60;
     game.p_p2->y += (int)manVelY/60;
+
+    if (game.p_p1->x < game.p_p2->x && game.p_p1->y > game.p_p2->y - 25 && game.p_p1->y < game.p_p2->y + 25 && game.p_p2->AI)        //AI
+    {
+        game.p_p2->shooting = true;
+        game.action->p2Shooting = true;
+
+    }
+    else if (game.p_p2->AI)
+    {
+       game.p_p2->shooting = false;
+        game.action->p2Shooting = false;
+    }
 
     // moving bullets
     for(int i = 0; i < MAXBULLETS; i++) if(game.bullets[i].display)
@@ -327,23 +349,31 @@ void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size)
     TTF_Quit();
 }
 
-void initNewGame(gameState game)
+void initNewGame(gameState *game)
 {
-    game.gameIsOver = false;
+    game->gameIsOver = false;
 
-    game.p_p1->hp = 50;
-    game.p_p1->x = 50;
-    game.p_p1->y = HEIGHT - 100;
-    game.p_p1->facingLeft = false;
-    game.p_p1->alive = true;
-    game.p_p1->currentSprite = 4;
+    game->p_p1->hp = 50;
+    game->p_p1->x = 50;
+    game->p_p1->y = HEIGHT - 100;
+    game->p_p1->facingLeft = false;
+    game->p_p1->alive = true;
+    game->p_p1->currentSprite = 4;
+    game->p_p1->AI = false;
 
-    game.p_p2->hp = 50;
-    game.p_p2->x = WIDTH - 100;
-    game.p_p2->y = HEIGHT - 100;
-    game.p_p2->facingLeft = true;
-    game.p_p2->alive = true;
-    game.p_p2->currentSprite = 4;
+    game->p_p2->hp = 50;
+    game->p_p2->x = WIDTH - 100;
+    game->p_p2->y = HEIGHT - 100;
+    game->p_p2->facingLeft = true;
+    game->p_p2->alive = true;
+    game->p_p2->currentSprite = 4;
+    game->p_p2->AI = false;
+
+}
+
+void AI(int *manVelX, int *manVelY, gameState game)
+{
+
 }
 
 

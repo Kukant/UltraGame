@@ -51,7 +51,7 @@ int main()
     // init action
     Action *p_action = malloc(sizeof(Action));
     p_action->down = p_action->up = p_action->left = p_action->right = p_action->p1Shooting = false;
-    p_action->down2 = p_action->up2 = p_action->left2 = p_action->right2 = p_action->p2Shooting = false;
+    p_action->down2 = p_action->up2 = p_action->left2 = p_action->right2 = p_action->p2Shooting =  false;
 
 
     bool running = true;
@@ -62,8 +62,8 @@ int main()
         bullets[i].display = false;
 
     // setting up the players
-    Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50};
-    Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50};
+    Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false};
+    Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false};
 
     // gameState init
     gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer};

@@ -21,7 +21,7 @@ typedef struct{
 typedef struct{
     int x;
     int y;
-    bool walking, shooting, alive, facingLeft;
+    bool walking, shooting, alive, facingLeft, AI;
     int currentSprite;
     int hp;
 
@@ -56,4 +56,6 @@ void renderStuff(SDL_Renderer *renderer, gameState game);
 void logicStuff(gameState game, gameState *p_game);
 int isInWindow(int x, int y);
 void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size);
-void initNewGame(gameState game);
+void initNewGame(gameState *game);
+void AI(int *manVelX, int *manVelY, gameState game);
+
