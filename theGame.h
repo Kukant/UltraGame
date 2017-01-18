@@ -4,6 +4,8 @@
 
  */
  #include <SDL2/SDL_ttf.h>
+ #include <SDL2/SDL_mixer.h>
+ #include <sys/time.h>
 
  // macro definitions
 #define HEIGHT 1080 //540
@@ -38,13 +40,16 @@ typedef struct{
     Man *p_p1;
     Man *p_p2;
     Bullet *bullets;
-    bool gameIsOver;
+    bool gameIsOver, walkAI;
+
+    Mix_Chunk *ak47;
 
     Action *action;
-    SDL_Texture *bulletTexture;
+    SDL_Texture *bulletTexture, *backTexture;
     SDL_Renderer *renderer;
+    int startTime, endTime;
 
-    int frames;
+    unsigned int frames;
 
 } gameState;
 
@@ -58,4 +63,8 @@ int isInWindow(int x, int y);
 void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size);
 void initNewGame(gameState *game);
 void AI(int *manVelX, int *manVelY, gameState game);
+int AI_help(gameState game);
+void movingBullets(gameState *game);
+bool colDetected(int type, Man *man);
+void merge(char *result, char *one, char *two, char *three);
 

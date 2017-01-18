@@ -3,7 +3,7 @@
  *  Author: Tomas K.
  *
  *
- *  linker options: -std=c99 -lSDL2 -lSDL2_image -lSDL2_ttf
+ *  linker options: -std=c99 -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "theGame.h"
 
@@ -28,8 +29,11 @@
 int main()
 {
     // initializing
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+
+
 
     // create a SDL window
     SDL_Window *window = SDL_CreateWindow(
@@ -56,6 +60,9 @@ int main()
 
     bool running = true;
 
+    // init audio
+    Mix_Chunk *ak47 = Mix_LoadWAV("ak47.wav");
+
     // init bullets
     Bullet bullets[MAXBULLETS];
     for(int i = 0; i < MAXBULLETS; i++)
@@ -65,8 +72,11 @@ int main()
     Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false};
     Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false};
 
+    // starttime
+    time_t startTime = time(NULL);
+
     // gameState init
-    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer};
+    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer, .ak47 = ak47, .walkAI = true, .startTime = startTime};
 
     // loading images
     SDL_Surface *sheet;
@@ -79,7 +89,11 @@ int main()
     if((sheet = IMG_Load("banana.png")) == NULL)
             printf("banana.png not found\n");
     game.bulletTexture = SDL_CreateTextureFromSurface(renderer, sheet);
+    if((sheet = IMG_Load("background.png")) == NULL)
+            printf("background.png not found\n");
+    game.backTexture = SDL_CreateTextureFromSurface(renderer, sheet);
     SDL_FreeSurface(sheet);
+
 
     // Animation loop
     while(running)
@@ -101,6 +115,8 @@ int main()
 
         game.frames = game.frames + 1;
 
+        SDL_Delay(500/60);
+
 
 
     } // end of animation loop
@@ -110,6 +126,8 @@ int main()
     SDL_DestroyTexture(game.bulletTexture);
     SDL_DestroyTexture(player1.sheetTexture);
     SDL_DestroyTexture(player2.sheetTexture);
+    SDL_DestroyTexture(game.backTexture);
+    Mix_FreeChunk(ak47);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
