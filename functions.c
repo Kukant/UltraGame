@@ -135,16 +135,21 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
 }
 /**
  *
- *  This function does a lot of grapzic stuff.
+ *  This function does a lot of graphic stuff.
  *
  */
 void renderStuff(SDL_Renderer *renderer, gameState game)
 {
     // setting the wall.
-    /*SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);*/
     SDL_Rect backRect = { 0, 0, WIDTH, HEIGHT};
     SDL_RenderCopy(renderer, game.backTexture, NULL, &backRect);
+
+    // ledges
+    for(int i = 0; i < MAXLEDGES && (i - 1)*300 < WIDTH; i++)
+    {
+        SDL_Rect lRect = {game.ledges[i].x, game.ledges[i].y, game.ledges[i].w, game.ledges[i].h};
+        SDL_RenderCopy(renderer, game.ledgeTexture, NULL, &lRect);
+    }
 
     // bullets
     for(int i = 0; i < MAXBULLETS; i++) if (game.bullets[i].display)
@@ -153,11 +158,37 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
         SDL_RenderCopy(renderer, game.bulletTexture, NULL, &bRect);
     }
     //hp
-    char hp[4];
-    sprintf(hp, "%d", game.p_p1->hp);
-    drawText(renderer, hp, 2, 2, 50);
-    sprintf(hp, "%d", game.p_p2->hp);
-    drawText(renderer, hp, WIDTH - 2 , 2, 50);
+    if(game.frames == game.lastHit)
+    {
+        TTF_Init();
+        TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
+        SDL_Color Red = {255, 0, 0};
+
+        char hp[4];
+        sprintf(hp, "%d", game.p_p1->hp);
+        SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, hp, Red);
+        game.p_texts->hp1 = SDL_CreateTextureFromSurface(renderer, textSurface);
+        game.p_texts->hp1Rect.x = 2;
+        game.p_texts->hp1Rect.y = 2;
+        game.p_texts->hp1Rect.w = 50*0.66*strlen(hp);
+        game.p_texts->hp1Rect.h = 50;
+
+        sprintf(hp, "%d", game.p_p2->hp);
+        textSurface = TTF_RenderText_Solid(Blox2, hp, Red);
+        game.p_texts->hp2 = SDL_CreateTextureFromSurface(renderer, textSurface);
+        game.p_texts->hp2Rect.x = WIDTH - 36 * strlen(hp);
+        game.p_texts->hp2Rect.y = 2;
+        game.p_texts->hp2Rect.w = 50*0.66*strlen(hp);
+        game.p_texts->hp2Rect.h = 50;
+
+        SDL_FreeSurface(textSurface);
+        // texture freed in main
+        TTF_CloseFont(Blox2);
+        TTF_Quit();
+    }
+
+    SDL_RenderCopy(renderer, game.p_texts->hp1, NULL, &game.p_texts->hp1Rect);
+    SDL_RenderCopy(renderer, game.p_texts->hp2, NULL, &game.p_texts->hp2Rect);
 
 
     // player1
@@ -183,20 +214,37 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
     // game over
     if(game.gameIsOver)
     {
-        drawText(renderer, "GAME OVER", WIDTH / 2 - 297 , 30, 100);
+        SDL_RenderCopy(renderer, game.p_texts->gameOver, NULL, &game.p_texts->gORect);
         if(game.p_p1->hp > game.p_p2->hp)
-             drawText(renderer, "PLAYER 1 WON", WIDTH / 2 - 237 , HEIGHT / 2 - 200, 60);
+             SDL_RenderCopy(renderer, game.p_texts->p1Won, NULL, &game.p_texts->wRect);
         else
-             drawText(renderer, "PLAYER 2 WON", WIDTH / 2 - 237 , HEIGHT / 2 - 200, 60);
+             SDL_RenderCopy(renderer, game.p_texts->p2Won, NULL, &game.p_texts->wRect);
 
         // time
         int gameTime = game.endTime - game.startTime;
+        char hp[4];
         sprintf(hp, "%d", gameTime);
         char result[100];
-        merge(result, "TIME  ", hp, " S");
-        drawText(renderer, result, WIDTH / 2 - 198 , HEIGHT / 2 - 320, 60);
-    }
+        merge(result, "TIME ", hp, " S");
+        if(time(NULL) == game.endTime)
+        {
+            TTF_Init();
+            TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
+            SDL_Color Red = {255, 0, 0};
 
+            game.p_texts->tRect.w = 0.66*60*strlen(result);
+
+            SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, result, Red);
+            game.p_texts->time = SDL_CreateTextureFromSurface(renderer, textSurface);
+            SDL_FreeSurface(textSurface);
+            // texture freed in main
+            TTF_CloseFont(Blox2);
+            TTF_Quit();
+        }
+
+
+        SDL_RenderCopy(renderer, game.p_texts->time, NULL, &game.p_texts->tRect);
+    }
 }
 /**
  *
@@ -279,7 +327,7 @@ void logicStuff(gameState game, gameState *p_game)
     }
 
     // moving bullets
-    movingBullets(&game);
+    movingBullets(&game, p_game);
 
 
     if((game.p_p1->hp <= 0 || game.p_p2->hp <= 0) && !game.gameIsOver)
@@ -298,7 +346,6 @@ int isInWindow(int x, int y)
 void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size)
 {
     TTF_Init();
-
     TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", size);
     SDL_Color Red = {255, 0, 0};
     SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, text, Red);
@@ -322,6 +369,8 @@ void initNewGame(gameState *game)
     game->action->p2Shooting = false;
     game->action->p1Shooting = false;
     game->startTime = startTime;
+    game->lastHit = game->frames;
+
 
     for(int i = 0; i < MAXBULLETS; i++)
         game->bullets[i].display = false;
@@ -369,7 +418,7 @@ void AI(int *manVelX, int *manVelY, gameState game)
     }
     else
     {
-        if (game.p_p2->x < HEIGHT/2)
+        if (game.p_p2->y < HEIGHT/2)
             *manVelY = SPEED;
         else
             *manVelY = -SPEED;
@@ -388,14 +437,14 @@ int AI_help(gameState game)
     int returnValue = 0;
     for (int i = 0; i < MAXBULLETS && returnValue == 0; i++)
     {
-        if(game.bullets[i].y > y && game.bullets[i].y < y + 50 && game.bullets[i].x < x && game.bullets[i].x > x - 500 && game.bullets[i].goingRight && game.bullets[i].display)
+        if(game.bullets[i].y > y - 2 && game.bullets[i].y < y + 60 && game.bullets[i].x < x && game.bullets[i].x > x - 500 && game.bullets[i].goingRight && game.bullets[i].display)
             returnValue++;
     }
 
     return returnValue;
 }
 
-void movingBullets(gameState *game)
+void movingBullets(gameState *game, gameState *realGame)
 {
     for(int i = 0; i < MAXBULLETS; i++) if(game->bullets[i].display)
     {
@@ -406,28 +455,40 @@ void movingBullets(gameState *game)
         {
             game->bullets[i].display = false;
             if(!game->gameIsOver)
-            game->p_p1->hp--;
+            {
+                game->p_p1->hp--;
+                realGame->lastHit = realGame->frames;
+            }
         }
         // p1 bullet from the right side
         else if( game->p_p1->x - 3 < game->bullets[i].x && game->p_p1->x + 14 > game->bullets[i].x && game->bullets[i].y > game->p_p1->y && game->bullets[i].y < game->p_p1->y + 50 && !game->bullets[i].goingRight)
         {
             game->bullets[i].display = false;
             if(!game->gameIsOver)
-            game->p_p1->hp--;
+            {
+                game->p_p1->hp--;
+                realGame->lastHit = realGame->frames;
+            }
         }
         // p2 bullet from the left side
         else if( game->p_p2->x + 14 > game->bullets[i].x && game->p_p2->x - 3< game->bullets[i].x && game->bullets[i].y > game->p_p2->y && game->bullets[i].y < game->p_p2->y + 50 && game->bullets[i].goingRight)
         {
             game->bullets[i].display = false;
             if(!game->gameIsOver)
+            {
                 game->p_p2->hp--;
+                realGame->lastHit = realGame->frames;
+            }
         }
         // p2 bullet from the right side
         else if( game->p_p2->x - 3 < game->bullets[i].x && game->p_p2->x + 14 > game->bullets[i].x && game->bullets[i].y > game->p_p2->y && game->bullets[i].y < game->p_p2->y + 50 && !game->bullets[i].goingRight)
         {
             game->bullets[i].display = false;
             if(!game->gameIsOver)
+            {
                 game->p_p2->hp--;
+                realGame->lastHit = realGame->frames;
+            }
         }
 
     }
@@ -518,6 +579,8 @@ bool colDetected(int type, Man *man)
             else
                 return 0;
     }
+
+    return 0;
 }
 
 void merge(char *result, char *one, char *two, char *three)

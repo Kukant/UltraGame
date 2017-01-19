@@ -13,6 +13,8 @@
 #define SPEED 300
 #define MAXBULLETS 1000
 #define BULLETSPEED 700
+#define GRAVITY 0.50
+#define MAXLEDGES 300
 
  // structs definitions
 typedef struct{
@@ -21,8 +23,12 @@ typedef struct{
 } Action;
 
 typedef struct{
-    int x;
-    int y;
+    SDL_Texture *p1Won, *p2Won, *gameOver, *time, *hp1, *hp2;
+    SDL_Rect wRect, gORect, tRect,hp1Rect,hp2Rect;
+}Texts;
+
+typedef struct{
+    float x, y, dy;
     bool walking, shooting, alive, facingLeft, AI;
     int currentSprite;
     int hp;
@@ -37,19 +43,25 @@ typedef struct{
 } Bullet;
 
 typedef struct{
+    int x, y, w, h;
+}Ledge;
+
+typedef struct{
     Man *p_p1;
     Man *p_p2;
     Bullet *bullets;
+    Ledge *ledges;
     bool gameIsOver, walkAI;
+    Texts *p_texts;
 
     Mix_Chunk *ak47;
 
     Action *action;
-    SDL_Texture *bulletTexture, *backTexture;
+    SDL_Texture *bulletTexture, *backTexture, *ledgeTexture;
     SDL_Renderer *renderer;
     int startTime, endTime;
 
-    unsigned int frames;
+    unsigned long long int frames, lastHit;
 
 } gameState;
 
@@ -64,7 +76,7 @@ void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size);
 void initNewGame(gameState *game);
 void AI(int *manVelX, int *manVelY, gameState game);
 int AI_help(gameState game);
-void movingBullets(gameState *game);
+void movingBullets(gameState *game, gameState *realGame);
 bool colDetected(int type, Man *man);
 void merge(char *result, char *one, char *two, char *three);
 

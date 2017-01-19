@@ -8,13 +8,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
+
 
 #include "theGame.h"
 
@@ -23,6 +24,8 @@
 #define SPEED 300
 #define BULLETSPEED 700
 #define MAXBULLETS 1000
+#define GRAVITY 0.50
+#define MAXLEDGES 300
 
 
 //************************************MAIN******************
@@ -68,15 +71,62 @@ int main()
     for(int i = 0; i < MAXBULLETS; i++)
         bullets[i].display = false;
 
+    // init ledges
+    Ledge ledges[MAXLEDGES];
+    for(int i = 0; i < MAXLEDGES && (i - 1)*300 < WIDTH; i++)
+    {
+        ledges[i].x = i * 300;
+        ledges[i].y = HEIGHT - 10;
+        ledges[i].w = 300;
+        ledges[i].h = 10;
+    }
+
     // setting up the players
-    Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false};
-    Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false};
+    Man player1 = {.x = 50, .y = HEIGHT - 100, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false, .dy = 0};
+    Man player2 = {.x = WIDTH - 100, .y = HEIGHT - 100, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50, .AI = false, .dy = 0};
 
     // starttime
     time_t startTime = time(NULL);
 
     // gameState init
-    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer, .ak47 = ak47, .walkAI = true, .startTime = startTime};
+    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer, .ak47 = ak47, .walkAI = true,
+                      .startTime = startTime, .ledges = ledges, .p_texts = malloc(sizeof(Texts)), .lastHit = 0};
+
+    // init of texts
+    TTF_Init();
+    TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
+    SDL_Color Red = {255, 0, 0};
+
+    SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, "GAME OVER", Red);
+    game.p_texts->gameOver = SDL_CreateTextureFromSurface(game.renderer, textSurface);
+    int lenght = 9;
+    game.p_texts->gORect.x = WIDTH / 2 - 297;
+    game.p_texts->gORect.y =  30;
+    game.p_texts->gORect.w = 100*lenght*0.66;
+    game.p_texts->gORect.h = 100;
+
+    TTF_CloseFont(Blox2);
+    Blox2 = TTF_OpenFont("Blox2.ttf", 60);
+
+    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 1 WON", Red);
+    game.p_texts->p1Won = SDL_CreateTextureFromSurface(game.renderer, textSurface);
+    lenght = 12;
+    game.p_texts->wRect.x = WIDTH / 2 - 237;
+    game.p_texts->wRect.y = HEIGHT / 2 - 200;
+    game.p_texts->wRect.w = 60*lenght*0.66;
+    game.p_texts->wRect.h = 60;
+
+    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 2 WON", Red);
+    game.p_texts->p2Won = SDL_CreateTextureFromSurface(game.renderer, textSurface);
+
+    game.p_texts->tRect.x = WIDTH / 2 - 198;
+    game.p_texts->tRect.y = HEIGHT / 2 - 320;
+    game.p_texts->tRect.w = 60*9*0.66;
+    game.p_texts->tRect.h = 60;
+
+    TTF_CloseFont(Blox2);
+    SDL_FreeSurface(textSurface);
+
 
     // loading images
     SDL_Surface *sheet;
@@ -92,6 +142,9 @@ int main()
     if((sheet = IMG_Load("background.png")) == NULL)
             printf("background.png not found\n");
     game.backTexture = SDL_CreateTextureFromSurface(renderer, sheet);
+    if((sheet = IMG_Load("wall.png")) == NULL)
+            printf("wall.png not found\n");
+    game.ledgeTexture = SDL_CreateTextureFromSurface(renderer, sheet);
     SDL_FreeSurface(sheet);
 
 
@@ -115,7 +168,8 @@ int main()
 
         game.frames = game.frames + 1;
 
-        SDL_Delay(500/60);
+        //if (!game.gameIsOver)
+            SDL_Delay(500/60);
 
 
 
@@ -123,10 +177,19 @@ int main()
 
     // releasing resources
     free(p_action);
+    SDL_DestroyTexture(game.p_texts->gameOver);
+    SDL_DestroyTexture(game.p_texts->p1Won);
+    SDL_DestroyTexture(game.p_texts->p2Won);
+    SDL_DestroyTexture(game.p_texts->time);
+    SDL_DestroyTexture(game.p_texts->hp1);
+    SDL_DestroyTexture(game.p_texts->hp2);
+    free(game.p_texts);
+    TTF_Quit();
     SDL_DestroyTexture(game.bulletTexture);
     SDL_DestroyTexture(player1.sheetTexture);
     SDL_DestroyTexture(player2.sheetTexture);
     SDL_DestroyTexture(game.backTexture);
+    SDL_DestroyTexture(game.ledgeTexture);
     Mix_FreeChunk(ak47);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
