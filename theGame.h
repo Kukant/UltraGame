@@ -10,10 +10,10 @@
  // macro definitions
 #define HEIGHT 1080 //540
 #define WIDTH 1920 //960
-#define SPEED 300
+#define SPEED 3
 #define MAXBULLETS 1000
 #define BULLETSPEED 700
-#define GRAVITY 0.50
+#define GRAVITY 0.12f
 #define MAXLEDGES 300
 
  // structs definitions
@@ -29,7 +29,7 @@ typedef struct{
 
 typedef struct{
     float x, y, dy;
-    bool walking, shooting, alive, facingLeft, AI;
+    bool walking, shooting, alive, facingLeft, onLedge, jump;
     int currentSprite;
     int hp;
 
@@ -37,13 +37,14 @@ typedef struct{
 } Man;
 
 typedef struct{
-    int x, y;
+    float x, y;
     bool display; // is it on the screen
     bool goingRight;
 } Bullet;
 
 typedef struct{
-    int x, y, w, h;
+    float x, y, w, h;
+    bool vertical;
 }Ledge;
 
 typedef struct{
@@ -51,13 +52,13 @@ typedef struct{
     Man *p_p2;
     Bullet *bullets;
     Ledge *ledges;
-    bool gameIsOver, walkAI;
+    bool gameIsOver;
     Texts *p_texts;
 
     Mix_Chunk *ak47;
 
     Action *action;
-    SDL_Texture *bulletTexture, *backTexture, *ledgeTexture;
+    SDL_Texture *bulletTexture, *backTexture, *ledgeTexture, *ledgeTextureYX;
     SDL_Renderer *renderer;
     int startTime, endTime;
 
@@ -70,13 +71,16 @@ typedef struct{
  */
 void eventsDetection(SDL_Event *event, Action *action, bool *running, gameState *game, SDL_Window *window);
 void renderStuff(SDL_Renderer *renderer, gameState game);
-void logicStuff(gameState game, gameState *p_game);
+void logicStuff(gameState *game);
 int isInWindow(int x, int y);
-void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size);
 void initNewGame(gameState *game);
 void AI(int *manVelX, int *manVelY, gameState game);
 int AI_help(gameState game);
-void movingBullets(gameState *game, gameState *realGame);
+void movingBullets(gameState *game);
 bool colDetected(int type, Man *man);
 void merge(char *result, char *one, char *two, char *three);
+void setLedges(Ledge *ledges);
+void initTexts(gameState game);
+void loadImages(gameState *game);
+void collDetect(gameState *game, Man *man);
 

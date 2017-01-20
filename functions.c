@@ -27,11 +27,10 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                     {
                         case SDL_SCANCODE_W:
                             p_action->up = true;
-
                             break;
-                        case SDL_SCANCODE_S:
+                        /*case SDL_SCANCODE_S:
                             p_action->down = true;
-                            break;
+                            break;*/
 
                         case SDL_SCANCODE_D:
                             p_action->right = true;
@@ -50,9 +49,9 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->up2 = true;
                             break;
 
-                        case SDL_SCANCODE_DOWN:
+                        /*case SDL_SCANCODE_DOWN:
                             p_action->down2 = true;
-                            break;
+                            break;*/
 
                         case SDL_SCANCODE_RIGHT:
                             p_action->right2 = true;
@@ -70,14 +69,6 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             break;
                         case SDL_SCANCODE_ESCAPE:
                             *running = false;
-                            break;
-                        case SDL_SCANCODE_U:
-
-                            game->p_p2->AI = true;
-                            break;
-                        case SDL_SCANCODE_I:
-                            if (!game->action->p2Shooting)
-                                game->p_p2->AI = false;
                             break;
 
                     }
@@ -111,9 +102,9 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->up2 = false;
                             break;
 
-                        case SDL_SCANCODE_DOWN:
+                        /*case SDL_SCANCODE_DOWN:
                             p_action->down2 = false;
-                            break;
+                            break;*/
 
                         case SDL_SCANCODE_RIGHT:
                             p_action->right2 = false;
@@ -145,7 +136,13 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
     SDL_RenderCopy(renderer, game.backTexture, NULL, &backRect);
 
     // ledges
-    for(int i = 0; i < MAXLEDGES && (i - 1)*300 < WIDTH; i++)
+    for(int i = 0; i < MAXLEDGES; i++) if (game.ledges[i].vertical == true)
+    {
+        SDL_Rect lRect = {game.ledges[i].x, game.ledges[i].y, game.ledges[i].w, game.ledges[i].h};
+        SDL_RenderCopy(renderer, game.ledgeTextureYX, NULL, &lRect);
+    }
+
+    for(int i = 0; i < MAXLEDGES; i++) if (game.ledges[i].vertical == false)
     {
         SDL_Rect lRect = {game.ledges[i].x, game.ledges[i].y, game.ledges[i].w, game.ledges[i].h};
         SDL_RenderCopy(renderer, game.ledgeTexture, NULL, &lRect);
@@ -182,7 +179,7 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
         game.p_texts->hp2Rect.h = 50;
 
         SDL_FreeSurface(textSurface);
-        // texture freed in main
+        // textures freed in main
         TTF_CloseFont(Blox2);
         TTF_Quit();
     }
@@ -215,19 +212,23 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
     if(game.gameIsOver)
     {
         SDL_RenderCopy(renderer, game.p_texts->gameOver, NULL, &game.p_texts->gORect);
+
+        // won
         if(game.p_p1->hp > game.p_p2->hp)
              SDL_RenderCopy(renderer, game.p_texts->p1Won, NULL, &game.p_texts->wRect);
         else
              SDL_RenderCopy(renderer, game.p_texts->p2Won, NULL, &game.p_texts->wRect);
 
         // time
-        int gameTime = game.endTime - game.startTime;
-        char hp[4];
-        sprintf(hp, "%d", gameTime);
-        char result[100];
-        merge(result, "TIME ", hp, " S");
-        if(time(NULL) == game.endTime)
+
+        if(time(NULL) == game.endTime && game.frames == game.lastHit)
         {
+            int gameTime = game.endTime - game.startTime;
+            char hp[4];
+            sprintf(hp, "%d", gameTime);
+            char result[100];
+            merge(result, "TIME ", hp, " S");
+
             TTF_Init();
             TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
             SDL_Color Red = {255, 0, 0};
@@ -241,8 +242,6 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
             TTF_CloseFont(Blox2);
             TTF_Quit();
         }
-
-
         SDL_RenderCopy(renderer, game.p_texts->time, NULL, &game.p_texts->tRect);
     }
 }
@@ -252,88 +251,92 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
  *
  */
 
-void logicStuff(gameState game, gameState *p_game)
+void logicStuff(gameState *game)
 {
-    // player1
-    int manVelX = 0;
-    int manVelY = 0;
+    // player1 movement
 
-    if (game.action->up && !game.action->down && !colDetected(1, game.p_p1)) manVelY = -SPEED;
-    if (!game.action->up && game.action->down && !colDetected(2, game.p_p1)) manVelY = SPEED;
-    if (game.action->left && !game.action->right && !colDetected(4, game.p_p1))
+    int manVelX = 0;
+
+    if (game->action->up && !game->action->down && game->p_p1->onLedge)
+    {
+        game->p_p1->dy = -8;
+        game->p_p1->onLedge = false;
+    }
+
+    if (game->action->left && !game->action->right)
     {
         manVelX = -SPEED;
-        game.p_p1->facingLeft = true;
+        game->p_p1->facingLeft = true;
     }
-    if (game.action->right && !game.action->left && !colDetected(3, game.p_p1))
+
+    if (game->action->right && !game->action->left)
     {
         manVelX = SPEED;
-        game.p_p1->facingLeft = false;
+        game->p_p1->facingLeft = false;
     }
 
-    game.p_p1->x += (int)manVelX/60;
-    game.p_p1->y += (int)manVelY/60;
+    game->p_p1->x += (int)manVelX;
 
-    // player2
+
+
+
+
+    // player2 movement
     manVelX = 0;
-    manVelY = 0;
-    if(game.p_p2->AI == false)
-    {
-        if (game.action->up2 && !game.action->down2 && !colDetected(1, game.p_p2)) manVelY = -SPEED;
-        if (!game.action->up2 && game.action->down2 && !colDetected(2, game.p_p2)) manVelY = SPEED;
-        if (game.action->left2 && !game.action->right2 && !colDetected(4, game.p_p2))
-        {
-            manVelX = -SPEED;
-            game.p_p2->facingLeft = true;
-        }
-        if (game.action->right2 && !game.action->left2 && !colDetected(3, game.p_p2))
-        {
-            manVelX = SPEED;
-            game.p_p2->facingLeft = false;
-        }
-    }
-    // AI p2 moving
-    else
-    {
-        if ((game.frames % 60) == 0)
-        {
-            time_t seconds = time(NULL);
-            if ((int)(seconds % 3) == 0 || (int)(seconds % 7) == 0 || (int)(seconds % 16) == 0) // zmena stavu jestli ma AI chodit
-            {
-                if (p_game->walkAI)
-                   p_game->walkAI = false;
-                else
-                    p_game->walkAI = true;
-            }
-        }
 
-        AI(&manVelX, &manVelY, game);
+    if (game->action->up2 && !game->action->down2  &&  game->p_p2->onLedge)
+    {
+        game->p_p2->dy = -8;
+        game->p_p2->onLedge = false;
+    }
+    if (game->action->left2 && !game->action->right2 )
+    {
+        manVelX = -SPEED;
+        game->p_p2->facingLeft = true;
+    }
+    if (game->action->right2 && !game->action->left2)
+    {
+        manVelX = SPEED;
+        game->p_p2->facingLeft = false;
     }
 
-    game.p_p2->x += (int)manVelX/60;
-    game.p_p2->y += (int)manVelY/60;
+    game->p_p2->x += (int)manVelX;
 
-    // AI shooting
-    if (game.p_p1->x < game.p_p2->x && game.p_p1->y > game.p_p2->y - 25 && game.p_p1->y < game.p_p2->y + 25 && game.p_p2->AI)
-    {
-        game.p_p2->shooting = true;
-        game.action->p2Shooting = true;
 
-    }
-    else if (game.p_p2->AI)
-    {
-       game.p_p2->shooting = false;
-        game.action->p2Shooting = false;
-    }
+
+
+
+    // collision detection
+    collDetect(game, game->p_p1);
+    collDetect(game, game->p_p2);
+
+    //gravity
+        if (game->p_p2->onLedge == true)
+            game->p_p2->dy = 0.00;
+
+        game->p_p2->y += game->p_p2->dy;
+
+        if (!game->p_p2->onLedge)
+            game->p_p2->dy += GRAVITY;
+
+    //gravity
+
+        if (game->p_p1->onLedge == true)
+            game->p_p1->dy = 0.00;
+
+        game->p_p1->y += game->p_p1->dy;
+
+        if (!game->p_p1->onLedge)
+            game->p_p1->dy += GRAVITY;
 
     // moving bullets
-    movingBullets(&game, p_game);
+    movingBullets(game);
 
 
-    if((game.p_p1->hp <= 0 || game.p_p2->hp <= 0) && !game.gameIsOver)
+    if((game->p_p1->hp <= 0 || game->p_p2->hp <= 0) && !game->gameIsOver)
     {
-        p_game->gameIsOver = true;
-        p_game->endTime = time(NULL);
+        game->gameIsOver = true;
+        game->endTime = time(NULL);
     }
 
 }
@@ -341,25 +344,6 @@ void logicStuff(gameState game, gameState *p_game)
 int isInWindow(int x, int y)
 {
     return (x > 0 && x < WIDTH && y > 0 && y < HEIGHT)? 1 : 0;
-}
-
-void drawText(SDL_Renderer *renderer, char *text, int x, int y, int size)
-{
-    TTF_Init();
-    TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", size);
-    SDL_Color Red = {255, 0, 0};
-    SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, text, Red);
-    SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    int lenght = strlen(text);
-    int tmpX = 20*lenght + x > WIDTH ? x - size*lenght*0.66 : x;
-    SDL_Rect textRect = {.x = tmpX, .y = y, .w = size*lenght*0.66, .h = size};
-    SDL_FreeSurface(textSurface);
-
-    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-
-    TTF_CloseFont(Blox2);
-    SDL_DestroyTexture(textTexture);
-    TTF_Quit();
 }
 
 void initNewGame(gameState *game)
@@ -376,88 +360,37 @@ void initNewGame(gameState *game)
         game->bullets[i].display = false;
 
     game->p_p1->hp = 50;
-    game->p_p1->x = 50;
+    game->p_p1->x = 52;
     game->p_p1->y = HEIGHT - 100;
+    game->p_p1->dy = 0;
     game->p_p1->facingLeft = false;
     game->p_p1->alive = true;
     game->p_p1->currentSprite = 4;
-    game->p_p1->AI = false;
 
     game->p_p2->hp = 50;
-    game->p_p2->x = WIDTH - 100;
+    game->p_p2->x = WIDTH - 102;
     game->p_p2->y = HEIGHT - 100;
+    game->p_p2->dy = 0;
     game->p_p2->facingLeft = true;
     game->p_p2->alive = true;
     game->p_p2->currentSprite = 4;
-    game->p_p2->AI = false;
 
 }
 
-void AI(int *manVelX, int *manVelY, gameState game)
-{
-    if(!AI_help(game))//kdyz v obdelniku pred nim nejsou kulky
-    {
-         if (game.walkAI)
-         {
-            if (game.p_p1->y > game.p_p2->y)
-                *manVelY = SPEED/2;
-            else if (game.p_p1->y < game.p_p2->y)
-                *manVelY = -SPEED/2;
-            else
-                *manVelY = 0;
-         }
-         else
-         {
-            if (game.p_p1->y > game.p_p2->y)
-                *manVelY = SPEED;
-            else if (game.p_p1->y < game.p_p2->y)
-                *manVelY = -SPEED;
-            else
-                *manVelY = 0;
-         }
-    }
-    else
-    {
-        if (game.p_p2->y < HEIGHT/2)
-            *manVelY = SPEED;
-        else
-            *manVelY = -SPEED;
-    }
-}
-
-/**
- *  Funkce vraci nulu pokud hracem nejsou kulky. Jinak vraci true.
- *
- */
-int AI_help(gameState game)
-{
-    int x = game.p_p2->x;
-    int y = game.p_p2->y;
-
-    int returnValue = 0;
-    for (int i = 0; i < MAXBULLETS && returnValue == 0; i++)
-    {
-        if(game.bullets[i].y > y - 2 && game.bullets[i].y < y + 60 && game.bullets[i].x < x && game.bullets[i].x > x - 500 && game.bullets[i].goingRight && game.bullets[i].display)
-            returnValue++;
-    }
-
-    return returnValue;
-}
-
-void movingBullets(gameState *game, gameState *realGame)
+void movingBullets(gameState *game)
 {
     for(int i = 0; i < MAXBULLETS; i++) if(game->bullets[i].display)
     {
         game->bullets[i].x = game->bullets[i].x + (game->bullets[i].goingRight? BULLETSPEED/60 : -BULLETSPEED/60);
 
         // p1 bullet from the left side
-        if( game->p_p1->x + 14 > game->bullets[i].x && game->p_p1->x - 3< game->bullets[i].x && game->bullets[i].y > game->p_p1->y && game->bullets[i].y < game->p_p1->y + 50 && game->bullets[i].goingRight)
+        if( game->p_p1->x + 14 > game->bullets[i].x && game->p_p1->x - 3 < game->bullets[i].x && game->bullets[i].y > game->p_p1->y && game->bullets[i].y < game->p_p1->y + 50 && game->bullets[i].goingRight)
         {
             game->bullets[i].display = false;
             if(!game->gameIsOver)
             {
                 game->p_p1->hp--;
-                realGame->lastHit = realGame->frames;
+                game->lastHit = game->frames;
             }
         }
         // p1 bullet from the right side
@@ -467,7 +400,7 @@ void movingBullets(gameState *game, gameState *realGame)
             if(!game->gameIsOver)
             {
                 game->p_p1->hp--;
-                realGame->lastHit = realGame->frames;
+                game->lastHit = game->frames;
             }
         }
         // p2 bullet from the left side
@@ -477,7 +410,7 @@ void movingBullets(gameState *game, gameState *realGame)
             if(!game->gameIsOver)
             {
                 game->p_p2->hp--;
-                realGame->lastHit = realGame->frames;
+                game->lastHit = game->frames;
             }
         }
         // p2 bullet from the right side
@@ -487,7 +420,7 @@ void movingBullets(gameState *game, gameState *realGame)
             if(!game->gameIsOver)
             {
                 game->p_p2->hp--;
-                realGame->lastHit = realGame->frames;
+                game->lastHit = game->frames;
             }
         }
 
@@ -542,47 +475,6 @@ void movingBullets(gameState *game, gameState *realGame)
         game->p_p2->shooting = false;
 }
 
-bool colDetected(int type, Man *man)
-{
-    switch(type)
-    {
-        case 1: //up
-            if(man->y < 0)
-            {
-                man->y = 0;
-                return true;
-            }
-            else
-                return 0;
-        case 2: //down
-            if(man->y + 50 > HEIGHT)
-            {
-                man->y = HEIGHT - 50;
-                return true;
-            }
-            else
-                return 0;
-        case 3: //right
-            if(man->x + 40 > WIDTH)
-            {
-                man->x = WIDTH - 40;
-                return true;
-            }
-            else
-                return 0;
-        case 4: //left
-            if(man->x < 0)
-            {
-                man->x = 0;
-                return true;
-            }
-            else
-                return 0;
-    }
-
-    return 0;
-}
-
 void merge(char *result, char *one, char *two, char *three)
 {
     int i = 0;
@@ -592,6 +484,192 @@ void merge(char *result, char *one, char *two, char *three)
         result[i] = two[j];
     for(int j = 0; j < strlen(three) + 1; j++, i++) // aby se pripsala nula
         result[i] = three[j];
+}
+
+void initTexts(gameState game)
+{
+    TTF_Init();
+    TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
+    SDL_Color Red = {255, 0, 0};
+
+    SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, "GAME OVER", Red);
+    game.p_texts->gameOver = SDL_CreateTextureFromSurface(game.renderer, textSurface);
+    int lenght = 9;
+    game.p_texts->gORect.x = WIDTH / 2 - 297;
+    game.p_texts->gORect.y = 110;
+    game.p_texts->gORect.w = 100*lenght*0.66;
+    game.p_texts->gORect.h = 100;
+
+    TTF_CloseFont(Blox2);
+    Blox2 = TTF_OpenFont("Blox2.ttf", 60);
+
+    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 1 WON", Red);
+    game.p_texts->p1Won = SDL_CreateTextureFromSurface(game.renderer, textSurface);
+    lenght = 12;
+    game.p_texts->wRect.x = WIDTH / 2 - 237;
+    game.p_texts->wRect.y = HEIGHT / 2 - 200;
+    game.p_texts->wRect.w = 60*lenght*0.66;
+    game.p_texts->wRect.h = 60;
+
+    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 2 WON", Red);
+    game.p_texts->p2Won = SDL_CreateTextureFromSurface(game.renderer, textSurface);
+
+    game.p_texts->tRect.x = WIDTH / 2 - 198;
+    game.p_texts->tRect.y = HEIGHT / 2 - 320 + 15;
+    game.p_texts->tRect.w = 60*9*0.66;
+    game.p_texts->tRect.h = 60;
+
+    TTF_CloseFont(Blox2);
+    SDL_FreeSurface(textSurface);
+}
+
+void loadImages(gameState *game)
+{
+    SDL_Surface *sheet;
+    if((sheet = IMG_Load("sheet.png")) == NULL)
+            printf("sheet.png not found\n");
+    game->p_p1->sheetTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("badman_sheet.png")) == NULL)
+            printf("badman_sheet.png not found\n");
+    game->p_p2->sheetTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("banana.png")) == NULL)
+            printf("banana.png not found\n");
+    game->bulletTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("background.png")) == NULL)
+            printf("background.png not found\n");
+    game->backTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("wall.png")) == NULL)
+            printf("wall.png not found\n");
+    game->ledgeTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("wallYX.png")) == NULL)
+            printf("wallYX.png not found\n");
+    game->ledgeTextureYX = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    SDL_FreeSurface(sheet);
+}
+
+
+void setLedges(Ledge *ledges)
+{
+    int i = 0, j;
+    for(j = 0; j <= WIDTH / 300; j++) // bottom
+    {
+        ledges[j].x = j * 300;
+        ledges[j].y = HEIGHT - 50;
+        ledges[j].w = 300;
+        ledges[j].h = 50;
+        ledges[j].vertical = false;
+    }
+    i += j + 1;
+
+    for(j = 0; j <= WIDTH / 300; j++) // top
+    {
+        ledges[j + i].x = j * 300;
+        ledges[j + i].y = 53;
+        ledges[j + i].w = 300;
+        ledges[j + i].h = 50;
+        ledges[j + i].vertical = false;
+    }
+    i += j + 1;
+
+    for(j = 0; j <= HEIGHT / 300; j++) // left side
+    {
+        ledges[j + i].x = 0;
+        ledges[j + i].y = j * 300 + 53;
+        ledges[j + i].w = 50;
+        ledges[j + i].h = 300;
+        ledges[j + i].vertical = true;
+    }
+    i += j + 1;
+
+    for(j = 0; j <= HEIGHT / 300; j++) // right side
+    {
+        ledges[j + i].x = WIDTH - 50;
+        ledges[j + i].y = j * 300 + 53;
+        ledges[j + i].w = 50;
+        ledges[j + i].h = 300;
+        ledges[j + i].vertical = true;
+    }
+    i += j + 1;
+
+    ledges[i].x = WIDTH/2 - 25;
+    ledges[i].y = HEIGHT - 50 - 300;
+    ledges[i].w = 50;
+    ledges[i].h = 300;
+    ledges[i].vertical = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 - 25 - 300;
+    ledges[i].y = HEIGHT - 50 - 150;
+    ledges[i].w = 300;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    i++;
+
+    ledges[i].x = WIDTH/2 + 25;
+    ledges[i].y = HEIGHT - 50 - 150;
+    ledges[i].w = 300;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    i++;
+}
+
+void collDetect(gameState *game, Man *man)
+{
+    float mX = man->x;
+    float mY = man->y;
+    float mDY = man->dy;
+    man->onLedge = false;
+
+    Ledge *ledges = game->ledges;
+
+    for (int i = 0; i < MAXLEDGES; i++)
+    {
+        if (mX + 20 > ledges[i].x && mX + 20 < ledges[i].x + ledges[i].w )
+        {
+            // top, bumping our head
+            if (mY < ledges[i].y + ledges[i].h && mY > ledges[i].y && mDY < 0)
+            {
+                /*printf("up pl: .x %g .y %g\n", mX, mY);
+                printf("up %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );*/
+                man->dy = 0.00;
+                man->y = ledges[i].y + ledges[i].h;
+                mY = ledges[i].y + ledges[i].h;
+            }
+
+            // bottom standing on sth?
+            if (mY + 50 > ledges[i].y && mY + 50 < ledges[i].y + ledges[i].h && mDY > 0)
+            {
+                printf("xxxxpl: .x %g .y %g .dy %.5g\n", mX, mY,mDY);
+                printf("xxxxx %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
+                man->y = ledges[i].y - 50;
+                mY = ledges[i].y - 50;
+                man->dy = 0.00;
+                mDY = 0;
+                man->onLedge = true;
+            }
+        }
+
+        if (mY + 25 > ledges[i].y && mY + 25 < ledges[i].y + ledges[i].h )
+        {
+            // come from right side
+            if ( mX < ledges[i].x + ledges[i].w && mX > ledges[i].x)
+            {
+                printf("left pl: .x %g .y %g .dy %.5g\n", mX, mY,mDY);
+                printf("left %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
+                man->x = ledges[i].x + ledges[i].w;
+                mX = ledges[i].x + ledges[i].w;
+            }
+
+            // come from left side
+            if ( mX + 40 > ledges[i].x && mX + 40 < ledges[i].x + ledges[i].w)
+            {
+                printf("right pl: .x %g .y %g .dy %.5g.....................n", mX, mY,mDY);
+                printf("right %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
+                man->x = ledges[i].x - 40;
+                mX = ledges[i].x - 40;
+            }
+        }
+    }
 }
 
 
