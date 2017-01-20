@@ -240,11 +240,11 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
 
             TTF_Init();
             TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
-            SDL_Color Red = {255, 0, 0};
+            SDL_Color color = {255, 255, 255};
 
             game.p_texts->tRect.w = 0.66*60*strlen(result);
 
-            SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, result, Red);
+            SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, result, color);
             game.p_texts->time = SDL_CreateTextureFromSurface(renderer, textSurface);
             SDL_FreeSurface(textSurface);
             // texture freed in main
@@ -500,9 +500,9 @@ void initTexts(gameState game)
 {
     TTF_Init();
     TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
-    SDL_Color Red = {255, 0, 0};
+    SDL_Color color = {255, 255, 255};
 
-    SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, "GAME OVER", Red);
+    SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, "GAME OVER", color);
     game.p_texts->gameOver = SDL_CreateTextureFromSurface(game.renderer, textSurface);
     int lenght = 9;
     game.p_texts->gORect.x = WIDTH / 2 - 297;
@@ -513,7 +513,7 @@ void initTexts(gameState game)
     TTF_CloseFont(Blox2);
     Blox2 = TTF_OpenFont("Blox2.ttf", 60);
 
-    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 1 WON", Red);
+    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 1 WON", color);
     game.p_texts->p1Won = SDL_CreateTextureFromSurface(game.renderer, textSurface);
     lenght = 12;
     game.p_texts->wRect.x = WIDTH / 2 - 237;
@@ -521,7 +521,7 @@ void initTexts(gameState game)
     game.p_texts->wRect.w = 60*lenght*0.66;
     game.p_texts->wRect.h = 60;
 
-    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 2 WON", Red);
+    textSurface = TTF_RenderText_Solid(Blox2, "PLAYER 2 WON", color);
     game.p_texts->p2Won = SDL_CreateTextureFromSurface(game.renderer, textSurface);
 
     game.p_texts->tRect.x = WIDTH / 2 - 198;
