@@ -88,4 +88,5 @@ void initTexts(gameState game);
 void loadImages(gameState *game);
 void collDetect(gameState *game, Man *man);
 bool ledgeBullDetect(Bullet bullet, gameState *game);
+long long current_timestamp();
 

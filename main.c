@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -94,9 +95,11 @@ int main()
     // loading images
     loadImages(&game);
 
+    long long start, end;
     // Animation loop
     while(running)
     {
+        start = current_timestamp();
         // events processing
         while(SDL_PollEvent(&event))
         {
@@ -114,8 +117,9 @@ int main()
 
         game.frames = game.frames + 1;
 
+        end = current_timestamp();
         // not so fast
-        SDL_Delay(250/60);
+        SDL_Delay((500/60 - (end - start)) > 0 ? (500/60 - (end - start)) : 0 );
 
     } // end of animation loop
 

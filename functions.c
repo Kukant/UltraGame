@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -721,6 +722,14 @@ void setLedges(Ledge *ledges)
     i++;
 }
 
+long long current_timestamp()
+{
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+    // printf("milliseconds: %lld\n", milliseconds);
+    return milliseconds;
+}
 
 
 
