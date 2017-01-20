@@ -151,7 +151,7 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
     // bullets
     for(int i = 0; i < MAXBULLETS; i++) if (game.bullets[i].display)
     {
-        SDL_Rect bRect = { game.bullets[i].x, game.bullets[i].y, 8, 8 };
+        SDL_Rect bRect = { game.bullets[i].x, game.bullets[i].y, game.bullets[i].w, game.bullets[i].h };
         SDL_RenderCopy(renderer, game.bulletTexture, NULL, &bRect);
     }
     //hp
@@ -277,10 +277,6 @@ void logicStuff(gameState *game)
 
     game->p_p1->x += (int)manVelX;
 
-
-
-
-
     // player2 movement
     manVelX = 0;
 
@@ -302,15 +298,11 @@ void logicStuff(gameState *game)
 
     game->p_p2->x += (int)manVelX;
 
-
-
-
-
     // collision detection
     collDetect(game, game->p_p1);
     collDetect(game, game->p_p2);
 
-    //gravity
+    //gravity2
         if (game->p_p2->onLedge == true)
             game->p_p2->dy = 0.00;
 
@@ -319,7 +311,7 @@ void logicStuff(gameState *game)
         if (!game->p_p2->onLedge)
             game->p_p2->dy += GRAVITY;
 
-    //gravity
+    //gravity1
 
         if (game->p_p1->onLedge == true)
             game->p_p1->dy = 0.00;
@@ -429,7 +421,7 @@ void movingBullets(gameState *game)
     // deleting bullets
     for(int i = 0; i < MAXBULLETS; i++) if(game->bullets[i].display)
     {
-        if (!isInWindow(game->bullets[i].x,game->bullets[i].y))
+        if (!isInWindow(game->bullets[i].x,game->bullets[i].y) || ledgeBullDetect(game->bullets[i], game))
         {
             game->bullets[i].display = false;
         }
@@ -446,6 +438,8 @@ void movingBullets(gameState *game)
             game->bullets[i].goingRight = !game->p_p1->facingLeft;
             game->bullets[i].x = game->p_p1->facingLeft ? game->p_p1->x : (game->p_p1->x + 40);
             game->bullets[i].y = game->p_p1->y + 20;
+            game->bullets[i].w = 8;
+            game->bullets[i].h = 8;
 
             break;
         }
@@ -465,6 +459,8 @@ void movingBullets(gameState *game)
             game->bullets[i].goingRight = !game->p_p2->facingLeft;
             game->bullets[i].x = game->p_p2->facingLeft ? game->p_p2->x : (game->p_p2->x + 40);
             game->bullets[i].y = game->p_p2->y + 20;
+            game->bullets[i].w = 8;
+            game->bullets[i].h = 8;
 
             break;
         }
@@ -558,6 +554,7 @@ void setLedges(Ledge *ledges)
         ledges[j].w = 300;
         ledges[j].h = 50;
         ledges[j].vertical = false;
+        ledges[j].drawn = true;
     }
     i += j + 1;
 
@@ -568,6 +565,7 @@ void setLedges(Ledge *ledges)
         ledges[j + i].w = 300;
         ledges[j + i].h = 50;
         ledges[j + i].vertical = false;
+        ledges[j + i].drawn = true;
     }
     i += j + 1;
 
@@ -578,6 +576,7 @@ void setLedges(Ledge *ledges)
         ledges[j + i].w = 50;
         ledges[j + i].h = 300;
         ledges[j + i].vertical = true;
+        ledges[j + i].drawn = true;
     }
     i += j + 1;
 
@@ -588,6 +587,7 @@ void setLedges(Ledge *ledges)
         ledges[j + i].w = 50;
         ledges[j + i].h = 300;
         ledges[j + i].vertical = true;
+        ledges[j + i].drawn = true;
     }
     i += j + 1;
 
@@ -596,6 +596,7 @@ void setLedges(Ledge *ledges)
     ledges[i].w = 50;
     ledges[i].h = 300;
     ledges[i].vertical = true;
+    ledges[i].drawn = true;
     i++;
 
     ledges[i].x = WIDTH/2 - 25 - 300;
@@ -603,6 +604,7 @@ void setLedges(Ledge *ledges)
     ledges[i].w = 300;
     ledges[i].h = 50;
     ledges[i].vertical = false;
+    ledges[i].drawn = true;
     i++;
 
     ledges[i].x = WIDTH/2 + 25;
@@ -610,6 +612,7 @@ void setLedges(Ledge *ledges)
     ledges[i].w = 300;
     ledges[i].h = 50;
     ledges[i].vertical = false;
+    ledges[i].drawn = true;
     i++;
 }
 
@@ -639,9 +642,9 @@ void collDetect(gameState *game, Man *man)
             // bottom standing on sth?
             if (mY + 50 > ledges[i].y && mY + 50 < ledges[i].y + ledges[i].h && mDY > 0)
             {
-                printf("xxxxpl: .x %g .y %g .dy %.5g\n", mX, mY,mDY);
+                /*printf("xxxxpl: .x %g .y %g .dy %.5g\n", mX, mY,mDY);
                 printf("xxxxx %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
-                man->y = ledges[i].y - 50;
+                */man->y = ledges[i].y - 50;
                 mY = ledges[i].y - 50;
                 man->dy = 0.00;
                 mDY = 0;
@@ -654,24 +657,53 @@ void collDetect(gameState *game, Man *man)
             // come from right side
             if ( mX < ledges[i].x + ledges[i].w && mX > ledges[i].x)
             {
-                printf("left pl: .x %g .y %g .dy %.5g\n", mX, mY,mDY);
+                /*printf("left pl: .x %g .y %g .dy %.5g\n", mX, mY,mDY);
                 printf("left %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
-                man->x = ledges[i].x + ledges[i].w;
+                */man->x = ledges[i].x + ledges[i].w;
                 mX = ledges[i].x + ledges[i].w;
             }
 
             // come from left side
             if ( mX + 40 > ledges[i].x && mX + 40 < ledges[i].x + ledges[i].w)
             {
-                printf("right pl: .x %g .y %g .dy %.5g.....................n", mX, mY,mDY);
+                /*printf("right pl: .x %g .y %g .dy %.5g.....................n", mX, mY,mDY);
                 printf("right %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
-                man->x = ledges[i].x - 40;
+                */man->x = ledges[i].x - 40;
                 mX = ledges[i].x - 40;
             }
         }
     }
 }
 
+
+bool ledgeBullDetect(Bullet bullet, gameState *game)
+{
+    bool result = false;
+
+    if (bullet.goingRight)
+    {
+        for(int i = 0; i < MAXLEDGES && !result; i++) if (game->ledges[i].drawn)
+        {
+            if (game->ledges[i].x < bullet.x + bullet.w && game->ledges[i].x + game->ledges[i].w > bullet.x && bullet.y < game->ledges[i].y + game->ledges[i].h && bullet.y + bullet.h > game->ledges[i].y)
+                result = true;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < MAXLEDGES && !result; i++) if (game->ledges[i].drawn)
+        {
+            if (game->ledges[i].x + game->ledges[i].w > bullet.x && game->ledges[i].x < bullet.x && bullet.y < game->ledges[i].y + game->ledges[i].h && bullet.y + bullet.h > game->ledges[i].y)
+            {
+                /*printf("bullet: .x %g .y %g .w %g .h %g\n",bullet.x, bullet.y, bullet.w, bullet.h);
+                printf("ledge: .x %g .y %g .w %g .h %g\n\n",game->ledges[i].x, game->ledges[i].y, game->ledges[i].w, game->ledges[i].h);
+                */result = true;
+            }
+        }
+    }
+
+    return result;
+
+}
 
 
 

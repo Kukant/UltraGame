@@ -24,7 +24,7 @@
 #define SPEED 3
 #define BULLETSPEED 700
 #define MAXBULLETS 1000
-#define GRAVITY 0.12f
+#define GRAVITY 0.14f
 #define MAXLEDGES 300
 
 
@@ -128,7 +128,6 @@ int main()
     SDL_DestroyTexture(game.p_texts->hp1);
     SDL_DestroyTexture(game.p_texts->hp2);
     free(game.p_texts);
-    TTF_Quit();
     SDL_DestroyTexture(game.bulletTexture);
     SDL_DestroyTexture(player1.sheetTexture);
     SDL_DestroyTexture(player2.sheetTexture);
@@ -136,6 +135,7 @@ int main()
     SDL_DestroyTexture(game.ledgeTexture);
     SDL_DestroyTexture(game.ledgeTextureYX);
     Mix_FreeChunk(ak47);
+    TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

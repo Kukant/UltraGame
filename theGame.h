@@ -13,7 +13,7 @@
 #define SPEED 3
 #define MAXBULLETS 1000
 #define BULLETSPEED 700
-#define GRAVITY 0.12f
+#define GRAVITY 0.14f
 #define MAXLEDGES 300
 
  // structs definitions
@@ -37,14 +37,16 @@ typedef struct{
 } Man;
 
 typedef struct{
-    float x, y;
+    float x, y, w, h;
     bool display; // is it on the screen
     bool goingRight;
+
+
 } Bullet;
 
 typedef struct{
     float x, y, w, h;
-    bool vertical;
+    bool vertical, drawn;
 }Ledge;
 
 typedef struct{
@@ -74,13 +76,11 @@ void renderStuff(SDL_Renderer *renderer, gameState game);
 void logicStuff(gameState *game);
 int isInWindow(int x, int y);
 void initNewGame(gameState *game);
-void AI(int *manVelX, int *manVelY, gameState game);
-int AI_help(gameState game);
 void movingBullets(gameState *game);
-bool colDetected(int type, Man *man);
 void merge(char *result, char *one, char *two, char *three);
 void setLedges(Ledge *ledges);
 void initTexts(gameState game);
 void loadImages(gameState *game);
 void collDetect(gameState *game, Man *man);
+bool ledgeBullDetect(Bullet bullet, gameState *game);
 
