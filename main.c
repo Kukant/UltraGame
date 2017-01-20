@@ -115,7 +115,7 @@ int main()
         game.frames = game.frames + 1;
 
         // not so fast
-        SDL_Delay(500/60);
+        SDL_Delay(250/60);
 
     } // end of animation loop
 
@@ -125,8 +125,6 @@ int main()
     SDL_DestroyTexture(game.p_texts->p1Won);
     SDL_DestroyTexture(game.p_texts->p2Won);
     SDL_DestroyTexture(game.p_texts->time);
-    SDL_DestroyTexture(game.p_texts->hp1);
-    SDL_DestroyTexture(game.p_texts->hp2);
     free(game.p_texts);
     SDL_DestroyTexture(game.bulletTexture);
     SDL_DestroyTexture(player1.sheetTexture);
@@ -134,8 +132,8 @@ int main()
     SDL_DestroyTexture(game.backTexture);
     SDL_DestroyTexture(game.ledgeTexture);
     SDL_DestroyTexture(game.ledgeTextureYX);
+    SDL_DestroyTexture(game.helpTexture);
     Mix_FreeChunk(ak47);
-    TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

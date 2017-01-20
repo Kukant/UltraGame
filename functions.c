@@ -78,6 +78,10 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             *running = false;
                             break;
 
+                        case SDL_SCANCODE_H:
+                            game->help = true;
+                            break;
+
                     }
                     break;
                 case SDL_KEYUP:
@@ -127,6 +131,10 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
 
                         case SDL_SCANCODE_KP_ENTER:
                             p_action->p2Shooting = false;
+                            break;
+                        // rest
+                        case SDL_SCANCODE_H:
+                            game->help = false;
                             break;
 
                     }
@@ -244,6 +252,11 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
             TTF_Quit();
         }
         SDL_RenderCopy(renderer, game.p_texts->time, NULL, &game.p_texts->tRect);
+    }
+    if (game.help)
+    {
+            SDL_Rect rect = { 0, 0, WIDTH, HEIGHT};
+            SDL_RenderCopy(renderer, game.helpTexture, NULL, &rect);
     }
 }
 /**
@@ -541,6 +554,9 @@ void loadImages(gameState *game)
     if((sheet = IMG_Load("wallYX.png")) == NULL)
             printf("wallYX.png not found\n");
     game->ledgeTextureYX = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("help.png")) == NULL)
+            printf("help.png not found\n");
+    game->helpTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
     SDL_FreeSurface(sheet);
 }
 

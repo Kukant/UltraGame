@@ -59,13 +59,13 @@ typedef struct{
     Man *p_p2;
     Bullet *bullets;
     Ledge *ledges;
-    bool gameIsOver;
+    bool gameIsOver, help;
     Texts *p_texts;
 
     Mix_Chunk *ak47;
 
     Action *action;
-    SDL_Texture *bulletTexture, *backTexture, *ledgeTexture, *ledgeTextureYX;
+    SDL_Texture *bulletTexture, *backTexture, *ledgeTexture, *ledgeTextureYX, *helpTexture;
     SDL_Renderer *renderer;
     int startTime, endTime;
 
