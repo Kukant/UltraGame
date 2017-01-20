@@ -40,7 +40,7 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->left = true;
                             break;
 
-                        case SDL_SCANCODE_SPACE:
+                        case SDL_SCANCODE_V:
                             p_action->p1Shooting = true;
                             break;
 
@@ -61,12 +61,19 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->left2 = true;
                             break;
 
-                        case SDL_SCANCODE_M:
+                        case SDL_SCANCODE_P:
                             p_action->p2Shooting = true;
                             break;
+
+                        case SDL_SCANCODE_KP_ENTER:
+                            p_action->p2Shooting = true;
+                            break;
+
+                        // the rest
                         case SDL_SCANCODE_RETURN:
                             initNewGame(game);
                             break;
+
                         case SDL_SCANCODE_ESCAPE:
                             *running = false;
                             break;
@@ -92,7 +99,7 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->left = false;
                             break;
 
-                        case SDL_SCANCODE_SPACE:
+                        case SDL_SCANCODE_V:
                             p_action->p1Shooting = false;
                             break;
 
@@ -114,7 +121,11 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->left2 = false;
                             break;
 
-                        case SDL_SCANCODE_M:
+                        case SDL_SCANCODE_P:
+                            p_action->p2Shooting = false;
+                            break;
+
+                        case SDL_SCANCODE_KP_ENTER:
                             p_action->p2Shooting = false;
                             break;
 
@@ -154,38 +165,28 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
         SDL_Rect bRect = { game.bullets[i].x, game.bullets[i].y, game.bullets[i].w, game.bullets[i].h };
         SDL_RenderCopy(renderer, game.bulletTexture, NULL, &bRect);
     }
-    //hp
-    if(game.frames == game.lastHit)
-    {
-        TTF_Init();
-        TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
-        SDL_Color Red = {255, 0, 0};
+    //hp rectangles
+        //full ones
+    if (game.p_p1->hp > 33)
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //green
+    else if (game.p_p1->hp > 16)
+        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); //orange
+    else if (game.p_p1->hp >= 0)
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); //red
 
-        char hp[4];
-        sprintf(hp, "%d", game.p_p1->hp);
-        SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, hp, Red);
-        game.p_texts->hp1 = SDL_CreateTextureFromSurface(renderer, textSurface);
-        game.p_texts->hp1Rect.x = 2;
-        game.p_texts->hp1Rect.y = 2;
-        game.p_texts->hp1Rect.w = 50*0.66*strlen(hp);
-        game.p_texts->hp1Rect.h = 50;
+    SDL_Rect fillHp1 = {0, 0, (WIDTH /2 - 10) / 50 * game.p_p1->hp, 53};
+    SDL_RenderFillRect(renderer, &fillHp1);
 
-        sprintf(hp, "%d", game.p_p2->hp);
-        textSurface = TTF_RenderText_Solid(Blox2, hp, Red);
-        game.p_texts->hp2 = SDL_CreateTextureFromSurface(renderer, textSurface);
-        game.p_texts->hp2Rect.x = WIDTH - 36 * strlen(hp);
-        game.p_texts->hp2Rect.y = 2;
-        game.p_texts->hp2Rect.w = 50*0.66*strlen(hp);
-        game.p_texts->hp2Rect.h = 50;
+    if (game.p_p2->hp > 33)
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //green
+    else if (game.p_p2->hp > 16)
+        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); //orange
+    else if (game.p_p2->hp >= 0)
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); //red
 
-        SDL_FreeSurface(textSurface);
-        // textures freed in main
-        TTF_CloseFont(Blox2);
-        TTF_Quit();
-    }
+    SDL_Rect fillHp2 = {WIDTH  - (WIDTH /2 - 10) / 50 * game.p_p2->hp, 0, (WIDTH /2 - 10) / 50 * game.p_p2->hp, 53};
+    SDL_RenderFillRect(renderer, &fillHp2);
 
-    SDL_RenderCopy(renderer, game.p_texts->hp1, NULL, &game.p_texts->hp1Rect);
-    SDL_RenderCopy(renderer, game.p_texts->hp2, NULL, &game.p_texts->hp2Rect);
 
 
     // player1
@@ -543,79 +544,6 @@ void loadImages(gameState *game)
     SDL_FreeSurface(sheet);
 }
 
-
-void setLedges(Ledge *ledges)
-{
-    int i = 0, j;
-    for(j = 0; j <= WIDTH / 300; j++) // bottom
-    {
-        ledges[j].x = j * 300;
-        ledges[j].y = HEIGHT - 50;
-        ledges[j].w = 300;
-        ledges[j].h = 50;
-        ledges[j].vertical = false;
-        ledges[j].drawn = true;
-    }
-    i += j + 1;
-
-    for(j = 0; j <= WIDTH / 300; j++) // top
-    {
-        ledges[j + i].x = j * 300;
-        ledges[j + i].y = 53;
-        ledges[j + i].w = 300;
-        ledges[j + i].h = 50;
-        ledges[j + i].vertical = false;
-        ledges[j + i].drawn = true;
-    }
-    i += j + 1;
-
-    for(j = 0; j <= HEIGHT / 300; j++) // left side
-    {
-        ledges[j + i].x = 0;
-        ledges[j + i].y = j * 300 + 53;
-        ledges[j + i].w = 50;
-        ledges[j + i].h = 300;
-        ledges[j + i].vertical = true;
-        ledges[j + i].drawn = true;
-    }
-    i += j + 1;
-
-    for(j = 0; j <= HEIGHT / 300; j++) // right side
-    {
-        ledges[j + i].x = WIDTH - 50;
-        ledges[j + i].y = j * 300 + 53;
-        ledges[j + i].w = 50;
-        ledges[j + i].h = 300;
-        ledges[j + i].vertical = true;
-        ledges[j + i].drawn = true;
-    }
-    i += j + 1;
-
-    ledges[i].x = WIDTH/2 - 25;
-    ledges[i].y = HEIGHT - 50 - 300;
-    ledges[i].w = 50;
-    ledges[i].h = 300;
-    ledges[i].vertical = true;
-    ledges[i].drawn = true;
-    i++;
-
-    ledges[i].x = WIDTH/2 - 25 - 300;
-    ledges[i].y = HEIGHT - 50 - 150;
-    ledges[i].w = 300;
-    ledges[i].h = 50;
-    ledges[i].vertical = false;
-    ledges[i].drawn = true;
-    i++;
-
-    ledges[i].x = WIDTH/2 + 25;
-    ledges[i].y = HEIGHT - 50 - 150;
-    ledges[i].w = 300;
-    ledges[i].h = 50;
-    ledges[i].vertical = false;
-    ledges[i].drawn = true;
-    i++;
-}
-
 void collDetect(gameState *game, Man *man)
 {
     float mX = man->x;
@@ -703,6 +631,78 @@ bool ledgeBullDetect(Bullet bullet, gameState *game)
 
     return result;
 
+}
+
+void setLedges(Ledge *ledges)
+{
+    int i = 0, j;
+    for(j = 0; j <= WIDTH / 300; j++) // bottom
+    {
+        ledges[j].x = j * 300;
+        ledges[j].y = HEIGHT - 50;
+        ledges[j].w = 300;
+        ledges[j].h = 50;
+        ledges[j].vertical = false;
+        ledges[j].drawn = true;
+    }
+    i += j + 1;
+
+    for(j = 0; j <= WIDTH / 300; j++) // top
+    {
+        ledges[j + i].x = j * 300;
+        ledges[j + i].y = 53;
+        ledges[j + i].w = 300;
+        ledges[j + i].h = 50;
+        ledges[j + i].vertical = false;
+        ledges[j + i].drawn = true;
+    }
+    i += j + 1;
+
+    for(j = 0; j <= HEIGHT / 300; j++) // left side
+    {
+        ledges[j + i].x = 0;
+        ledges[j + i].y = j * 300 + 53;
+        ledges[j + i].w = 50;
+        ledges[j + i].h = 300;
+        ledges[j + i].vertical = true;
+        ledges[j + i].drawn = true;
+    }
+    i += j + 1;
+
+    for(j = 0; j <= HEIGHT / 300; j++) // right side
+    {
+        ledges[j + i].x = WIDTH - 50;
+        ledges[j + i].y = j * 300 + 53;
+        ledges[j + i].w = 50;
+        ledges[j + i].h = 300;
+        ledges[j + i].vertical = true;
+        ledges[j + i].drawn = true;
+    }
+    i += j + 1;
+
+    ledges[i].x = WIDTH/2 - 25;
+    ledges[i].y = HEIGHT - 50 - 300;
+    ledges[i].w = 50;
+    ledges[i].h = 300;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 - 25 - 300;
+    ledges[i].y = HEIGHT - 50 - 150;
+    ledges[i].w = 300;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 + 25;
+    ledges[i].y = HEIGHT - 50 - 150;
+    ledges[i].w = 300;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
 }
 
 

@@ -25,7 +25,7 @@
 #define BULLETSPEED 700
 #define MAXBULLETS 1000
 #define GRAVITY 0.14f
-#define MAXLEDGES 300
+#define MAXLEDGES 100
 
 
 //************************************MAIN******************
@@ -46,12 +46,12 @@ int main()
                                           WIDTH,
                                           HEIGHT,
                                           SDL_WINDOW_OPENGL
-                                        );
+                                         );
     // set window fullscreen
     SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
     // create renderer
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Event event;
 
@@ -72,8 +72,10 @@ int main()
         bullets[i].display = false;
 
     // setting up the players
-    Man player1 = {.x = 54, .y = HEIGHT - 105, .facingLeft = false, .alive = 1, .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false, .onLedge = true};
-    Man player2 = {.x = WIDTH - 104, .y = HEIGHT - 105, .facingLeft = true, .alive = 1, .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false};
+    Man player1 = {.x = 54, .y = HEIGHT - 105, .facingLeft = false, .alive = 1,
+                   .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false, .onLedge = true};
+    Man player2 = {.x = WIDTH - 104, .y = HEIGHT - 105, .facingLeft = true,
+                   .alive = 1, .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false};
 
     // starttime
     time_t startTime = time(NULL);
@@ -114,8 +116,6 @@ int main()
 
         // not so fast
         SDL_Delay(500/60);
-
-
 
     } // end of animation loop
 

@@ -14,7 +14,7 @@
 #define MAXBULLETS 1000
 #define BULLETSPEED 700
 #define GRAVITY 0.14f
-#define MAXLEDGES 300
+#define MAXLEDGES 100
 
  // structs definitions
 typedef struct{
@@ -48,6 +48,11 @@ typedef struct{
     float x, y, w, h;
     bool vertical, drawn;
 }Ledge;
+
+typedef struct{
+    float x, y, w, h;
+    bool drawn;
+}Ladder;
 
 typedef struct{
     Man *p_p1;
