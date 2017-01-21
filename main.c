@@ -73,10 +73,10 @@ int main()
         bullets[i].display = false;
 
     // setting up the players
-    Man player1 = {.x = 54, .y = HEIGHT - 105, .facingLeft = false, .alive = 1,
+    Man player1 = {.x = 54, .y = HEIGHT - 105, .facingLeft = false, .alive = 2,
                    .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false, .onLedge = true};
     Man player2 = {.x = WIDTH - 104, .y = HEIGHT - 105, .facingLeft = true,
-                   .alive = 1, .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false};
+                   .alive = 2, .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false};
 
     // starttime
     time_t startTime = time(NULL);

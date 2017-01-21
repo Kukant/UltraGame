@@ -199,25 +199,62 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
 
 
     // player1
-    if(game.p_p1->shooting == true)
-        game.p_p1->currentSprite = 5;
-    else
-        game.p_p1->currentSprite = 4;
+    if (game.p_p1->hp > 0)
+    {
+        if(game.p_p1->walking == true && game.frames % 6 == 0)
+        {
+            game.p_p1->currentSprite = (game.p_p1->currentSprite + 1) % 4;
+        }
+        else if (game.p_p1->shooting == true && game.p_p1->walking == false)
+            game.p_p1->currentSprite = 5;
+        else if (game.p_p1->walking == false)
+            game.p_p1->currentSprite = 4;
+    }
 
-    SDL_Rect srcRect = { 40*(game.p_p1->currentSprite), 0, 40, 50};
-    SDL_Rect rect = { game.p_p1->x, game.p_p1->y, 40, 50};
-    SDL_RenderCopyEx(renderer, game.p_p1->sheetTexture, &srcRect, &rect,0 , NULL, game.p_p1->facingLeft);
+    else if (game.p_p1->alive && game.frames % 6 == 0) // hp == 0
+    {
+        game.p_p1->currentSprite = 6;
+        game.p_p1->alive--;
+        if (game.p_p1->alive == 0)
+            game.p_p1->currentSprite = 7;
+
+    }
+
+    if (game.p_p1->alive)
+    {
+        SDL_Texture *p1Texture = game.p_p1->hp > 0 ? game.p_p1->sheetTexture : game.p_p2->sheetTexture; // if p1 is dead, than change texture
+        SDL_Rect srcRect = { 40*(game.p_p1->currentSprite), 0, 40, 50};
+        SDL_Rect rect = { game.p_p1->x, game.p_p1->y, 40, 50};
+        SDL_RenderCopyEx(renderer, p1Texture, &srcRect, &rect,0 , NULL, game.p_p1->facingLeft);
+    }
 
     // player2
-    if(game.p_p2->shooting == true)
-        game.p_p2->currentSprite = 5;
-    else
-        game.p_p2->currentSprite = 4;
+    if (game.p_p2->hp > 0)
+    {
+        if(game.p_p2->walking == true && game.frames % 6 == 0)
+        {
+            game.p_p2->currentSprite = (game.p_p2->currentSprite + 1) % 4;
+        }
+        else if (game.p_p2->shooting == true && game.p_p2->walking == false)
+            game.p_p2->currentSprite = 5;
+        else if (game.p_p2->walking == false)
+            game.p_p2->currentSprite = 4;
+    }
+    else if (game.p_p2->alive && game.frames % 6 == 0) // hp == 0
+    {
+        game.p_p2->currentSprite = 6;
+        game.p_p2->alive--;
+        if (game.p_p2->alive == 0)
+            game.p_p2->currentSprite = 7;
 
-    SDL_Rect srcRect2 = { 40*(game.p_p2->currentSprite), 0, 40, 50};
-    SDL_Rect rect2 = { game.p_p2->x, game.p_p2->y, 40, 50};
-    SDL_RenderCopyEx(renderer, game.p_p2->sheetTexture, &srcRect2, &rect2, 0, NULL, game.p_p2->facingLeft);
+    }
 
+    if (game.p_p2->alive)
+    {
+        SDL_Rect srcRect2 = { 40*(game.p_p2->currentSprite), 0, 40, 50};
+        SDL_Rect rect2 = { game.p_p2->x, game.p_p2->y, 40, 50};
+        SDL_RenderCopyEx(renderer, game.p_p2->sheetTexture, &srcRect2, &rect2, 0, NULL, game.p_p2->facingLeft);
+    }
     // game over
     if(game.gameIsOver)
     {
@@ -282,13 +319,19 @@ void logicStuff(gameState *game)
     {
         manVelX = -SPEED;
         game->p_p1->facingLeft = true;
+        game->p_p1->walking = true;
     }
+    else
+        game->p_p1->walking = false;
 
     if (game->action->right && !game->action->left)
     {
         manVelX = SPEED;
         game->p_p1->facingLeft = false;
+        game->p_p1->walking = true;
     }
+    else if (!game->p_p2->facingLeft)
+        game->p_p1->walking = false;
 
     game->p_p1->x += (int)manVelX;
 
@@ -304,12 +347,19 @@ void logicStuff(gameState *game)
     {
         manVelX = -SPEED;
         game->p_p2->facingLeft = true;
+        game->p_p2->walking = true;
     }
+    else
+        game->p_p2->walking = false;
+
     if (game->action->right2 && !game->action->left2)
     {
         manVelX = SPEED;
         game->p_p2->facingLeft = false;
+        game->p_p2->walking = true;
     }
+    else if (!game->p_p2->facingLeft)
+        game->p_p2->walking = false;
 
     game->p_p2->x += (int)manVelX;
 
@@ -371,7 +421,7 @@ void initNewGame(gameState *game)
     game->p_p1->y = HEIGHT - 100;
     game->p_p1->dy = 0;
     game->p_p1->facingLeft = false;
-    game->p_p1->alive = true;
+    game->p_p1->alive = 2;
     game->p_p1->currentSprite = 4;
 
     game->p_p2->hp = 50;
@@ -379,7 +429,7 @@ void initNewGame(gameState *game)
     game->p_p2->y = HEIGHT - 100;
     game->p_p2->dy = 0;
     game->p_p2->facingLeft = true;
-    game->p_p2->alive = true;
+    game->p_p2->alive = 2;
     game->p_p2->currentSprite = 4;
 
 }
@@ -444,15 +494,20 @@ void movingBullets(gameState *game)
     }
 
     // generating bullets
-    if (game->action->p1Shooting && (game->frames % 5) == 0)
+    if (game->action->p1Shooting && (game->frames % 5) == 0 && game->p_p1->alive)
     {
         Mix_PlayChannel(-1, game->ak47, 0); // ak47 sound
+        int shootingHeight;
+        if (game->p_p1->walking)
+            shootingHeight = 14;
+        else
+           shootingHeight = 19;
         for(int i = 0; i < MAXBULLETS; i++) if(!game->bullets[i].display)
         {
             game->bullets[i].display = true;
             game->bullets[i].goingRight = !game->p_p1->facingLeft;
             game->bullets[i].x = game->p_p1->facingLeft ? game->p_p1->x : (game->p_p1->x + 40);
-            game->bullets[i].y = game->p_p1->y + 20;
+            game->bullets[i].y = game->p_p1->y + shootingHeight;
             game->bullets[i].w = 8;
             game->bullets[i].h = 8;
 
@@ -464,16 +519,20 @@ void movingBullets(gameState *game)
     else
         game->p_p1->shooting = false;
 
-    if (game->action->p2Shooting && (game->frames % 5) == 0)
+    if (game->action->p2Shooting && (game->frames % 5) == 0 && game->p_p2->alive)
     {
         Mix_PlayChannel(-1, game->ak47, 0);
-
+        int shootingHeight;
+        if (game->p_p1->walking)
+            shootingHeight = 14;
+        else
+           shootingHeight = 19;
         for(int i = 0; i < MAXBULLETS; i++) if(!game->bullets[i].display)
         {
             game->bullets[i].display = true; // ak47 sound
             game->bullets[i].goingRight = !game->p_p2->facingLeft;
             game->bullets[i].x = game->p_p2->facingLeft ? game->p_p2->x : (game->p_p2->x + 40);
-            game->bullets[i].y = game->p_p2->y + 20;
+            game->bullets[i].y = game->p_p2->y + shootingHeight;
             game->bullets[i].w = 8;
             game->bullets[i].h = 8;
 
@@ -606,6 +665,7 @@ void collDetect(gameState *game, Man *man)
                 printf("left %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
                 */man->x = ledges[i].x + ledges[i].w;
                 mX = ledges[i].x + ledges[i].w;
+                man->walking = false;
             }
 
             // come from left side
@@ -615,6 +675,7 @@ void collDetect(gameState *game, Man *man)
                 printf("right %d .x %g .y %g .w %g .h %g\n\n",i,ledges[i].x,ledges[i].y,ledges[i].w,ledges[i].h );
                 */man->x = ledges[i].x - 40;
                 mX = ledges[i].x - 40;
+                man->walking = false;
             }
         }
     }

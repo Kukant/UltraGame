@@ -29,8 +29,8 @@ typedef struct{
 
 typedef struct{
     float x, y, dy;
-    bool walking, shooting, alive, facingLeft, onLedge, jump;
-    int currentSprite;
+    bool walking, shooting, facingLeft, onLedge, jump;
+    int currentSprite, alive;
     int hp;
 
     SDL_Texture *sheetTexture;

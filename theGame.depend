@@ -41,16 +41,17 @@
 	<SDL2/SDL_ttf.h>
 	"theGame.h"
 
-1484942879 /home/zeusko/Plocha/c/UltraGame/theGame.h
+1485007548 /home/zeusko/Plocha/c/UltraGame/theGame.h
 	<SDL2/SDL_ttf.h>
 	<SDL2/SDL_mixer.h>
 	<sys/time.h>
 
-1484942446 source:/home/zeusko/Plocha/c/UltraGame/main.c
+1485007580 source:/home/zeusko/Plocha/c/UltraGame/main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
 	<time.h>
+	<sys/time.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_image.h>
 	<SDL2/SDL_timer.h>
