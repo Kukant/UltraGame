@@ -5,6 +5,7 @@
  *
  *  linker options: -std=c99 -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -28,6 +29,8 @@
 #define GRAVITY 0.14f
 #define MAXLEDGES 100
 
+#define MAXSPECIALS 40
+
 
 //************************************MAIN******************
 int main()
@@ -36,8 +39,6 @@ int main()
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-
-
 
     // create a SDL window
     SDL_Window *window = SDL_CreateWindow(
@@ -66,6 +67,13 @@ int main()
 
     // init audio
     Mix_Chunk *ak47 = Mix_LoadWAV("ak47.wav");
+    Mix_Chunk *deathSound = Mix_LoadWAV("death.wav");
+    Mix_Music *backgroundm = Mix_LoadMUS("background.mp3");
+
+    Mix_PlayMusic(backgroundm, -1);
+
+    // init specials
+    Special specials[MAXSPECIALS];
 
     // init bullets
     Bullet bullets[MAXBULLETS];
@@ -73,17 +81,26 @@ int main()
         bullets[i].display = false;
 
     // setting up the players
-    Man player1 = {.x = 54, .y = HEIGHT - 105, .facingLeft = false, .alive = 2,
+    Man player1 = {.x = 54, .y = HEIGHT - 105, .facingLeft = false, .alive = 2, .ammo = 100,
                    .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false, .onLedge = true};
-    Man player2 = {.x = WIDTH - 104, .y = HEIGHT - 105, .facingLeft = true,
+    Man player2 = {.x = WIDTH - 104, .y = HEIGHT - 105, .facingLeft = true, .ammo = 100,
                    .alive = 2, .currentSprite = 4 , .hp = 50, .dy = 0.00f, .jump = false};
 
     // starttime
     time_t startTime = time(NULL);
 
     // gameState init
-    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0, .gameIsOver = false, .renderer = renderer, .ak47 = ak47,
-                      .startTime = startTime, .p_texts = malloc(sizeof(Texts)), .lastHit = 0};
+    gameState game = {.p_p1 = &player1, .p_p2 = &player2, .action = p_action, .bullets = bullets, .frames = 0,
+                      .gameIsOver = false, .renderer = renderer, .ak47 = ak47,
+                      .startTime = startTime, .p_texts = malloc(sizeof(Texts)), .lastHit = 0, .deathSound = deathSound
+
+                     };
+
+    game.specials = specials;
+
+    // init specials
+    initSpecials(specials);
+
     // init ledges
     Ledge ledges[MAXLEDGES];
     game.ledges = ledges;
@@ -110,7 +127,7 @@ int main()
         logicStuff(&game);
 
         // rendering
-        renderStuff(renderer, game);
+        renderStuff(renderer, &game);
 
         // Show what was drawn
         SDL_RenderPresent(renderer);
@@ -137,7 +154,12 @@ int main()
     SDL_DestroyTexture(game.ledgeTexture);
     SDL_DestroyTexture(game.ledgeTextureYX);
     SDL_DestroyTexture(game.helpTexture);
+    SDL_DestroyTexture(game.heartTexture);
+    SDL_DestroyTexture(game.ammoTexture);
     Mix_FreeChunk(ak47);
+    Mix_FreeChunk(deathSound);
+    Mix_FreeMusic(backgroundm);
+    Mix_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

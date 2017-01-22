@@ -92,9 +92,9 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->up = false;
                             break;
 
-                        case SDL_SCANCODE_S:
+                        /*case SDL_SCANCODE_S:
                             p_action->down = false;
-                            break;
+                            break;*/
 
                         case SDL_SCANCODE_D:
                             p_action->right = false;
@@ -149,152 +149,33 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
  *  This function does a lot of graphic stuff.
  *
  */
-void renderStuff(SDL_Renderer *renderer, gameState game)
+void renderStuff(SDL_Renderer *renderer, gameState *game)
 {
     // setting the wall.
     SDL_Rect backRect = { 0, 0, WIDTH, HEIGHT};
-    SDL_RenderCopy(renderer, game.backTexture, NULL, &backRect);
+    SDL_RenderCopy(renderer, game->backTexture, NULL, &backRect);
 
-    // ledges
-    for(int i = 0; i < MAXLEDGES; i++) if (game.ledges[i].vertical == true)
-    {
-        SDL_Rect lRect = {game.ledges[i].x, game.ledges[i].y, game.ledges[i].w, game.ledges[i].h};
-        SDL_RenderCopy(renderer, game.ledgeTextureYX, NULL, &lRect);
-    }
+    // ledges and bullets
+    renderLedges(game, renderer);
 
-    for(int i = 0; i < MAXLEDGES; i++) if (game.ledges[i].vertical == false)
-    {
-        SDL_Rect lRect = {game.ledges[i].x, game.ledges[i].y, game.ledges[i].w, game.ledges[i].h};
-        SDL_RenderCopy(renderer, game.ledgeTexture, NULL, &lRect);
-    }
+    // Specials
+    renderSpecials(game, renderer);
 
-    // bullets
-    for(int i = 0; i < MAXBULLETS; i++) if (game.bullets[i].display)
-    {
-        SDL_Rect bRect = { game.bullets[i].x, game.bullets[i].y, game.bullets[i].w, game.bullets[i].h };
-        SDL_RenderCopy(renderer, game.bulletTexture, NULL, &bRect);
-    }
-    //hp rectangles
-        //full ones
-    if (game.p_p1->hp > 33)
-        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //green
-    else if (game.p_p1->hp > 16)
-        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); //orange
-    else if (game.p_p1->hp >= 0)
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); //red
+    //hp rectangles and ammo
+    renderHP(game, renderer);
 
-    SDL_Rect fillHp1 = {0, 0, (WIDTH /2 - 10) / 50 * game.p_p1->hp, 53};
-    SDL_RenderFillRect(renderer, &fillHp1);
+    // players
+    renderPlayers(game, renderer);
 
-    if (game.p_p2->hp > 33)
-        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //green
-    else if (game.p_p2->hp > 16)
-        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); //orange
-    else if (game.p_p2->hp >= 0)
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); //red
-
-    SDL_Rect fillHp2 = {WIDTH  - (WIDTH /2 - 10) / 50 * game.p_p2->hp, 0, (WIDTH /2 - 10) / 50 * game.p_p2->hp, 53};
-    SDL_RenderFillRect(renderer, &fillHp2);
-
-
-
-    // player1
-    if (game.p_p1->hp > 0)
-    {
-        if(game.p_p1->walking == true && game.frames % 6 == 0)
-        {
-            game.p_p1->currentSprite = (game.p_p1->currentSprite + 1) % 4;
-        }
-        else if (game.p_p1->shooting == true && game.p_p1->walking == false)
-            game.p_p1->currentSprite = 5;
-        else if (game.p_p1->walking == false)
-            game.p_p1->currentSprite = 4;
-    }
-
-    else if (game.p_p1->alive && game.frames % 6 == 0) // hp == 0
-    {
-        game.p_p1->currentSprite = 6;
-        game.p_p1->alive--;
-        if (game.p_p1->alive == 0)
-            game.p_p1->currentSprite = 7;
-
-    }
-
-    if (game.p_p1->alive)
-    {
-        SDL_Texture *p1Texture = game.p_p1->hp > 0 ? game.p_p1->sheetTexture : game.p_p2->sheetTexture; // if p1 is dead, than change texture
-        SDL_Rect srcRect = { 40*(game.p_p1->currentSprite), 0, 40, 50};
-        SDL_Rect rect = { game.p_p1->x, game.p_p1->y, 40, 50};
-        SDL_RenderCopyEx(renderer, p1Texture, &srcRect, &rect,0 , NULL, game.p_p1->facingLeft);
-    }
-
-    // player2
-    if (game.p_p2->hp > 0)
-    {
-        if(game.p_p2->walking == true && game.frames % 6 == 0)
-        {
-            game.p_p2->currentSprite = (game.p_p2->currentSprite + 1) % 4;
-        }
-        else if (game.p_p2->shooting == true && game.p_p2->walking == false)
-            game.p_p2->currentSprite = 5;
-        else if (game.p_p2->walking == false)
-            game.p_p2->currentSprite = 4;
-    }
-    else if (game.p_p2->alive && game.frames % 6 == 0) // hp == 0
-    {
-        game.p_p2->currentSprite = 6;
-        game.p_p2->alive--;
-        if (game.p_p2->alive == 0)
-            game.p_p2->currentSprite = 7;
-
-    }
-
-    if (game.p_p2->alive)
-    {
-        SDL_Rect srcRect2 = { 40*(game.p_p2->currentSprite), 0, 40, 50};
-        SDL_Rect rect2 = { game.p_p2->x, game.p_p2->y, 40, 50};
-        SDL_RenderCopyEx(renderer, game.p_p2->sheetTexture, &srcRect2, &rect2, 0, NULL, game.p_p2->facingLeft);
-    }
     // game over
-    if(game.gameIsOver)
+    if(game->gameIsOver)
     {
-        SDL_RenderCopy(renderer, game.p_texts->gameOver, NULL, &game.p_texts->gORect);
-
-        // won
-        if(game.p_p1->hp > game.p_p2->hp)
-             SDL_RenderCopy(renderer, game.p_texts->p1Won, NULL, &game.p_texts->wRect);
-        else
-             SDL_RenderCopy(renderer, game.p_texts->p2Won, NULL, &game.p_texts->wRect);
-
-        // time
-
-        if(time(NULL) == game.endTime && game.frames == game.lastHit)
-        {
-            int gameTime = game.endTime - game.startTime;
-            char hp[4];
-            sprintf(hp, "%d", gameTime);
-            char result[100];
-            merge(result, "TIME ", hp, " S");
-
-            TTF_Init();
-            TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
-            SDL_Color color = {255, 255, 255};
-
-            game.p_texts->tRect.w = 0.66*60*strlen(result);
-
-            SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, result, color);
-            game.p_texts->time = SDL_CreateTextureFromSurface(renderer, textSurface);
-            SDL_FreeSurface(textSurface);
-            // texture freed in main
-            TTF_CloseFont(Blox2);
-            TTF_Quit();
-        }
-        SDL_RenderCopy(renderer, game.p_texts->time, NULL, &game.p_texts->tRect);
+        renderGO(game, renderer);
     }
-    if (game.help)
+    if (game->help)
     {
             SDL_Rect rect = { 0, 0, WIDTH, HEIGHT};
-            SDL_RenderCopy(renderer, game.helpTexture, NULL, &rect);
+            SDL_RenderCopy(renderer, game->helpTexture, NULL, &rect);
     }
 }
 /**
@@ -304,6 +185,36 @@ void renderStuff(SDL_Renderer *renderer, gameState game)
  */
 
 void logicStuff(gameState *game)
+{
+    // players movement
+    playersMoving(game);
+
+    // collision detection
+    collDetect(game, game->p_p1);
+    collDetect(game, game->p_p2);
+
+    // specials coll. detect
+    specialsCollDetect(game->specials, game->p_p1);
+    specialsCollDetect(game->specials, game->p_p2);
+
+    // set specials display
+    setDisplaySpec(game);
+
+    // gravity
+    gravityMoving(game);
+
+    // moving bullets
+    movingBullets(game);
+
+    if((game->p_p1->hp <= 0 || game->p_p2->hp <= 0) && !game->gameIsOver)
+    {
+        game->gameIsOver = true;
+        game->endTime = time(NULL);
+    }
+
+}
+
+void playersMoving(gameState *game)
 {
     // player1 movement
 
@@ -362,43 +273,32 @@ void logicStuff(gameState *game)
         game->p_p2->walking = false;
 
     game->p_p2->x += (int)manVelX;
+}
 
-    // collision detection
-    collDetect(game, game->p_p1);
-    collDetect(game, game->p_p2);
 
-    //gravity2
-        if (game->p_p2->onLedge == true)
-            game->p_p2->dy = 0.00;
+void gravityMoving(gameState* game)
+{
+    //gravity 2
+    if (game->p_p2->onLedge == true)
+        game->p_p2->dy = 0.00;
 
-        game->p_p2->y += game->p_p2->dy;
+    game->p_p2->y += game->p_p2->dy;
 
-        if (!game->p_p2->onLedge)
-            game->p_p2->dy += GRAVITY;
+    if (!game->p_p2->onLedge)
+        game->p_p2->dy += GRAVITY;
 
     //gravity1
 
-        if (game->p_p1->onLedge == true)
-            game->p_p1->dy = 0.00;
+    if (game->p_p1->onLedge == true)
+        game->p_p1->dy = 0.00;
 
-        game->p_p1->y += game->p_p1->dy;
+    game->p_p1->y += game->p_p1->dy;
 
-        if (!game->p_p1->onLedge)
-            game->p_p1->dy += GRAVITY;
-
-    // moving bullets
-    movingBullets(game);
-
-
-    if((game->p_p1->hp <= 0 || game->p_p2->hp <= 0) && !game->gameIsOver)
-    {
-        game->gameIsOver = true;
-        game->endTime = time(NULL);
-    }
-
+    if (!game->p_p1->onLedge)
+        game->p_p1->dy += GRAVITY;
 }
 
-int isInWindow(int x, int y)
+int isInWindow(int x, int y) // bullet
 {
     return (x > 0 && x < WIDTH && y > 0 && y < HEIGHT)? 1 : 0;
 }
@@ -416,6 +316,10 @@ void initNewGame(gameState *game)
     for(int i = 0; i < MAXBULLETS; i++)
         game->bullets[i].display = false;
 
+    for(int i = 0; i < MAXSPECIALS; i++)
+        game->specials[i].display = false;
+
+    game->p_p1->ammo = 100;
     game->p_p1->hp = 50;
     game->p_p1->x = 52;
     game->p_p1->y = HEIGHT - 100;
@@ -424,6 +328,7 @@ void initNewGame(gameState *game)
     game->p_p1->alive = 2;
     game->p_p1->currentSprite = 4;
 
+    game->p_p2->ammo = 100;
     game->p_p2->hp = 50;
     game->p_p2->x = WIDTH - 102;
     game->p_p2->y = HEIGHT - 100;
@@ -494,8 +399,9 @@ void movingBullets(gameState *game)
     }
 
     // generating bullets
-    if (game->action->p1Shooting && (game->frames % 5) == 0 && game->p_p1->alive)
+    if (game->action->p1Shooting && (game->frames % 5) == 0 && game->p_p1->alive && game->p_p1->ammo > 0)
     {
+        game->p_p1->ammo--;
         Mix_PlayChannel(-1, game->ak47, 0); // ak47 sound
         int shootingHeight;
         if (game->p_p1->walking)
@@ -519,8 +425,9 @@ void movingBullets(gameState *game)
     else
         game->p_p1->shooting = false;
 
-    if (game->action->p2Shooting && (game->frames % 5) == 0 && game->p_p2->alive)
+    if (game->action->p2Shooting && (game->frames % 5) == 0 && game->p_p2->alive && game->p_p2->ammo > 0)
     {
+        game->p_p2->ammo--;
         Mix_PlayChannel(-1, game->ak47, 0);
         int shootingHeight;
         if (game->p_p1->walking)
@@ -617,6 +524,12 @@ void loadImages(gameState *game)
     if((sheet = IMG_Load("help.png")) == NULL)
             printf("help.png not found\n");
     game->helpTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("heart.png")) == NULL)
+            printf("heart.png not found\n");
+    game->heartTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
+    if((sheet = IMG_Load("ammo.png")) == NULL)
+            printf("ammo.png not found\n");
+    game->ammoTexture = SDL_CreateTextureFromSurface(game->renderer, sheet);
     SDL_FreeSurface(sheet);
 }
 
@@ -758,6 +671,7 @@ void setLedges(Ledge *ledges)
     }
     i += j + 1;
 
+    // bottom -------------------------------------
     ledges[i].x = WIDTH/2 - 25;
     ledges[i].y = HEIGHT - 50 - 300;
     ledges[i].w = 50;
@@ -781,6 +695,178 @@ void setLedges(Ledge *ledges)
     ledges[i].vertical = false;
     ledges[i].drawn = true;
     i++;
+
+    ledges[i].x = WIDTH/2 + 170; // right middle
+    ledges[i].y = HEIGHT - 50 - 320;
+    ledges[i].w = 300;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 + 170; // right middle vertical
+    ledges[i].y = HEIGHT - 50 - 370;
+    ledges[i].w = 50;
+    ledges[i].h = 100;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 - 470; // left middle
+    ledges[i].y = HEIGHT - 50 - 320;
+    ledges[i].w = 300;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 - 220; // left middle vertical
+    ledges[i].y = HEIGHT - 50 - 370;
+    ledges[i].w = 50;
+    ledges[i].h = 100;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = 50; // left short
+    ledges[i].y = HEIGHT - 50 - 350;
+    ledges[i].w = 150;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH - 200; // right short
+    ledges[i].y = HEIGHT - 50 - 350;
+    ledges[i].w = 150;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = 50; // left shorter
+    ledges[i].y = HEIGHT - 50 - 600;
+    ledges[i].w = 50;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH - 100; // right shorter
+    ledges[i].y = HEIGHT - 50 - 600;
+    ledges[i].w = 50;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = 50; // left  player
+    ledges[i].y = HEIGHT - 50 - 120;
+    ledges[i].w = 200;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH - 250; // right player
+    ledges[i].y = HEIGHT - 50 - 120;
+    ledges[i].w = 200;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    // top --------------------------
+
+    ledges[i].x = 170; // left start
+    ledges[i].y = 203;
+    ledges[i].w = 100;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = 270; // left side vertical
+    ledges[i].y = 203;
+    ledges[i].w = 50;
+    ledges[i].h = 200;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = 270; // left
+    ledges[i].y = 403;
+    ledges[i].w = 350;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = 620; // left vertical short
+    ledges[i].y = 353;
+    ledges[i].w = 50;
+    ledges[i].h = 100;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH - 100 - 170; // right start
+    ledges[i].y = 203;
+    ledges[i].w = 100;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH -100 - 170 - 50; // right side vertical
+    ledges[i].y = 203;
+    ledges[i].w = 50;
+    ledges[i].h = 200;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH -100 - 170 - 350; // right
+    ledges[i].y = 403;
+    ledges[i].w = 350;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH -100 - 170 - 350 - 50; // right vertical short
+    ledges[i].y = 353;
+    ledges[i].w = 50;
+    ledges[i].h = 100;
+    ledges[i].vertical = true;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 - 200; // middle one
+    ledges[i].y = 200;
+    ledges[i].w = 200;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    ledges[i].x = WIDTH/2 ; // middle second
+    ledges[i].y = 200;
+    ledges[i].w = 200;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
+
+    // center ----------------------------
+
+    ledges[i].x = WIDTH/2  - 100; // middle
+    ledges[i].y = 500;
+    ledges[i].w = 200;
+    ledges[i].h = 50;
+    ledges[i].vertical = false;
+    ledges[i].drawn = true;
+    i++;
 }
 
 long long current_timestamp()
@@ -788,8 +874,339 @@ long long current_timestamp()
     struct timeval te;
     gettimeofday(&te, NULL); // get current time
     long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
-    // printf("milliseconds: %lld\n", milliseconds);
+
     return milliseconds;
+}
+/// gane over texts
+void renderGO(gameState *game, SDL_Renderer *renderer)
+{
+    SDL_RenderCopy(renderer, game->p_texts->gameOver, NULL, &game->p_texts->gORect);
+
+    // won
+    if(game->p_p1->hp > game->p_p2->hp)
+        SDL_RenderCopy(renderer, game->p_texts->p1Won, NULL, &game->p_texts->wRect);
+    else
+        SDL_RenderCopy(renderer, game->p_texts->p2Won, NULL, &game->p_texts->wRect);
+
+    // time
+
+    if(time(NULL) == game->endTime && game->frames == game->lastHit)
+    {
+        int gameTime = game->endTime - game->startTime;
+        char hp[4];
+        sprintf(hp, "%d", gameTime);
+        char result[100];
+        merge(result, "TIME ", hp, " S");
+
+        TTF_Init();
+        TTF_Font *Blox2 = TTF_OpenFont("Blox2.ttf", 100);
+        SDL_Color color = {255, 255, 255};
+
+        game->p_texts->tRect.w = 0.66*60*strlen(result);
+
+        SDL_Surface *textSurface = TTF_RenderText_Solid(Blox2, result, color);
+        game->p_texts->time = SDL_CreateTextureFromSurface(renderer, textSurface);
+        SDL_FreeSurface(textSurface);
+        // texture freed in main
+        TTF_CloseFont(Blox2);
+        TTF_Quit();
+    }
+    SDL_RenderCopy(renderer, game->p_texts->time, NULL, &game->p_texts->tRect);
+}
+
+void renderPlayers(gameState *game, SDL_Renderer *renderer)
+{
+    // player1
+    if (game->p_p1->hp > 0)
+    {
+        if(game->p_p1->walking == true && game->frames % 6 == 0)
+        {
+            game->p_p1->currentSprite = (game->p_p1->currentSprite + 1) % 4;
+        }
+        else if (game->p_p1->shooting == true && game->p_p1->walking == false)
+            game->p_p1->currentSprite = 5;
+        else if (game->p_p1->walking == false)
+            game->p_p1->currentSprite = 4;
+    }
+
+    else if (game->p_p1->alive && game->frames % 6 == 0) // hp == 0
+    {
+        game->p_p1->currentSprite = 6;
+        game->p_p1->alive--;
+        if (game->p_p1->alive == 0)
+        {
+            game->p_p1->currentSprite = 7;
+            Mix_PlayChannel(-1, game->deathSound, 0);
+        }
+
+    }
+
+    if (game->p_p1->alive)
+    {
+        SDL_Texture *p1Texture = game->p_p1->hp > 0 ? game->p_p1->sheetTexture : game->p_p2->sheetTexture; // if p1 is dead, than change texture
+        SDL_Rect srcRect = { 40*(game->p_p1->currentSprite), 0, 40, 50};
+        SDL_Rect rect = { game->p_p1->x, game->p_p1->y, 40, 50};
+        SDL_RenderCopyEx(renderer, p1Texture, &srcRect, &rect,0 , NULL, game->p_p1->facingLeft);
+    }
+
+    // player2
+    if (game->p_p2->hp > 0)
+    {
+        if(game->p_p2->walking == true && game->frames % 6 == 0)
+        {
+            game->p_p2->currentSprite = (game->p_p2->currentSprite + 1) % 4;
+        }
+        else if (game->p_p2->shooting == true && game->p_p2->walking == false)
+            game->p_p2->currentSprite = 5;
+        else if (game->p_p2->walking == false)
+            game->p_p2->currentSprite = 4;
+    }
+    else if (game->p_p2->alive && game->frames % 6 == 0) // hp == 0
+    {
+        game->p_p2->currentSprite = 6;
+        game->p_p2->alive--;
+        if (game->p_p2->alive == 0)
+        {
+            Mix_PlayChannel(-1, game->deathSound, 0);
+            game->p_p2->currentSprite = 7;
+        }
+    }
+
+    if (game->p_p2->alive)
+    {
+        SDL_Rect srcRect2 = { 40*(game->p_p2->currentSprite), 0, 40, 50};
+        SDL_Rect rect2 = { game->p_p2->x, game->p_p2->y, 40, 50};
+        SDL_RenderCopyEx(renderer, game->p_p2->sheetTexture, &srcRect2, &rect2, 0, NULL, game->p_p2->facingLeft);
+    }
+}
+
+void renderHP(gameState *game, SDL_Renderer *renderer)
+{
+    //hp
+    if (game->p_p1->hp > 33)
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //green
+    else if (game->p_p1->hp > 16)
+        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); //orange
+    else if (game->p_p1->hp >= 0)
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); //red
+
+    SDL_Rect fillHp1 = {0, 0, (WIDTH /2 - 10) / 50 * game->p_p1->hp, 53};
+    SDL_RenderFillRect(renderer, &fillHp1);
+
+    if (game->p_p2->hp > 33)
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //green
+    else if (game->p_p2->hp > 16)
+        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); //orange
+    else if (game->p_p2->hp >= 0)
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); //red
+
+    SDL_Rect fillHp2 = {WIDTH  - (WIDTH /2 - 10) / 50 * game->p_p2->hp, 0, (WIDTH /2 - 10) / 50 * game->p_p2->hp, 53};
+    SDL_RenderFillRect(renderer, &fillHp2);
+
+
+    // ammo
+    SDL_SetRenderDrawColor(renderer, 204, 204, 0, 255); // yellow
+
+    SDL_Rect fillAmmo1 = { 0, HEIGHT - 12, (WIDTH /2 - 10) / 100 * game->p_p1->ammo, 12};
+    SDL_Rect fillAmmo2 = { WIDTH - (WIDTH /2 - 10) / 100 * game->p_p2->ammo, HEIGHT - 12, (WIDTH /2 - 10) / 100 * game->p_p2->ammo, 12};
+    SDL_RenderFillRect(renderer, &fillAmmo1);
+    SDL_RenderFillRect(renderer, &fillAmmo2);
+}
+
+void renderLedges(gameState *game, SDL_Renderer *renderer)
+{
+    for(int i = 0; i < MAXLEDGES; i++) if (game->ledges[i].vertical == true) // firstly vertical ones
+    {
+        SDL_Rect lRect = {game->ledges[i].x, game->ledges[i].y, game->ledges[i].w, game->ledges[i].h};
+        SDL_RenderCopy(renderer, game->ledgeTextureYX, NULL, &lRect);
+    }
+
+    for(int i = 0; i < MAXLEDGES; i++) if (game->ledges[i].vertical == false) //then horizontal ones
+    {
+        SDL_Rect lRect = {game->ledges[i].x, game->ledges[i].y, game->ledges[i].w, game->ledges[i].h};
+        SDL_RenderCopy(renderer, game->ledgeTexture, NULL, &lRect);
+    }
+
+    // bullets
+    for(int i = 0; i < MAXBULLETS; i++) if (game->bullets[i].display)
+    {
+        SDL_Rect bRect = { game->bullets[i].x, game->bullets[i].y, game->bullets[i].w, game->bullets[i].h };
+        SDL_RenderCopy(renderer, game->bulletTexture, NULL, &bRect);
+    }
+}
+
+void initSpecials(Special *specials)
+{
+    int i = 0;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = WIDTH/2 - 15;
+    specials[i].y = HEIGHT - 383;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = WIDTH/4;
+    specials[i].y = HEIGHT - 83;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = (WIDTH/4) * 3;
+    specials[i].y = HEIGHT - 83;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = WIDTH - 270 - 180;
+    specials[i].y = 370;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = 450;
+    specials[i].y = 370;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = 140;
+    specials[i].y = HEIGHT - 433;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 1;
+    specials[i].x = WIDTH - 170;
+    specials[i].y = HEIGHT - 433;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    // ammo
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = WIDTH/2 - 15;
+    specials[i].y = HEIGHT - 614;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = WIDTH/4 - 50;
+    specials[i].y = HEIGHT - 83;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = (WIDTH/4) * 3 + 50;
+    specials[i].y = HEIGHT - 83;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = WIDTH - 270 - 180 - 50;
+    specials[i].y = 370;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = 450 + 50;
+    specials[i].y = 370;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = 140 - 50;
+    specials[i].y = HEIGHT - 433;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+    specials[i].display = false;
+    specials[i].type = 2;
+    specials[i].x = WIDTH - 170 + 50;
+    specials[i].y = HEIGHT - 433;
+    specials[i].w = 30;
+    specials[i].h = 30;
+    i++;
+
+}
+void renderSpecials(gameState *game, SDL_Renderer *renderer)
+{
+    SDL_Texture *printTexture;
+
+    for(int i = 0; i < MAXSPECIALS; i++) if (game->specials[i].display)
+    {
+        switch (game->specials[i].type)
+        {
+            case 1:
+                printTexture = game->heartTexture;
+                break;
+            case 2:
+                printTexture = game->ammoTexture;
+                break;
+
+        }
+        SDL_Rect hRect = { game->specials[i].x, game->specials[i].y, game->specials[i].w, game->specials[i].h };
+        SDL_RenderCopy(renderer, printTexture, NULL, &hRect);
+    }
+}
+
+void specialsCollDetect(Special *specials, Man *man)
+{
+    float mX = man->x;
+    float mY = man->y;
+
+    for (int i = 0; i < MAXSPECIALS; i++) if (specials[i].display)
+    {
+        if (mX + 40 > specials[i].x && mX < specials[i].x + specials[i].w && mY + 50 > specials[i].y && mY < specials[i].y + specials[i].h)
+        {
+            if (man->hp < 50 && specials[i].type == 1)
+            {
+                specials[i].display = false;
+                man->hp = man->hp + 20 > 50 ? 50 : man->hp + 20;
+            }
+            else if (specials[i].type == 2 && man->ammo < 100 )
+            {
+                specials[i].display = false;
+                man->ammo = man->ammo + 30 > 100 ? 100 : man->ammo + 30;
+            }
+        }
+    }
+}
+
+void setDisplaySpec(gameState *game)
+{
+    srand(time(NULL));
+
+    if (game->frames % 200 == 0) // hearts
+    {
+        game->specials[rand() % 14].display = true;
+    }
+
+
 }
 
 
