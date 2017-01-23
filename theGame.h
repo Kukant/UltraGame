@@ -22,6 +22,8 @@
 typedef struct{
     bool up, down, left, right, up2, down2, left2, right2;
     bool p1Shooting, p2Shooting;
+    // mouse
+    bool mouseOn;
 } Action;
 
 typedef struct{

@@ -83,6 +83,13 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             game->help = true;
                             break;
 
+                        case SDL_SCANCODE_M:
+                            p_action->mouseOn = true;
+                            break;
+                        case SDL_SCANCODE_N:
+                            p_action->mouseOn = false;
+                            break;
+
                     }
                     break;
                 case SDL_KEYUP:
@@ -138,10 +145,47 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             game->help = false;
                             break;
 
+
                     }
                     break;
             }
+    // mouse
+    if (p_action->mouseOn)
+    {
+        int mouseX, mouseY;
+        int mButton = SDL_GetMouseState(&mouseX, &mouseY);
 
+        if (mouseX > game->p_p2->x && mouseX < game->p_p2->x + 40 )
+        {
+            p_action->left2 = false;
+            p_action->right2 = false;
+        }
+        else if (mouseX < game->p_p2->x + 20)
+        {
+            p_action->right2 = false;
+            p_action->left2 = true;
+        }
+        else if (mouseX > game->p_p2->x + 20)
+        {
+            p_action->left2 = false;
+            p_action->right2 = true;
+        }
+
+
+        if(mButton & SDL_BUTTON_LEFT)
+        {
+            p_action->p2Shooting = true;
+        }
+        else
+            p_action->p2Shooting = false;
+
+        if(mButton == 4)
+        {
+            p_action->up2 = true;
+        }
+        else
+            p_action->up2 = false;
+    }
 
 }
 /**
@@ -1201,7 +1245,7 @@ void setDisplaySpec(gameState *game)
 {
     srand(time(NULL));
 
-    if (game->frames % 200 == 0) // hearts
+    if (game->frames % 500 == 0) // hearts
     {
         game->specials[rand() % 14].display = true;
     }

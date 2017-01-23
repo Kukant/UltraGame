@@ -60,7 +60,8 @@ int main()
     // init action
     Action *p_action = malloc(sizeof(Action));
     p_action->down = p_action->up = p_action->left = p_action->right = p_action->p1Shooting = false;
-    p_action->down2 = p_action->up2 = p_action->left2 = p_action->right2 = p_action->p2Shooting =  false;
+    p_action->down2 = p_action->up2 = p_action->left2 = p_action->right2 = p_action->p2Shooting = p_action->mouseOn = false;
+
 
 
     bool running = true;
