@@ -1235,7 +1235,7 @@ void specialsCollDetect(Special *specials, Man *man)
             else if (specials[i].type == 2 && man->ammo < 100 )
             {
                 specials[i].display = false;
-                man->ammo = man->ammo + 30 > 100 ? 100 : man->ammo + 30;
+                man->ammo = 100;
             }
         }
     }
