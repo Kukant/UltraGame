@@ -12,7 +12,7 @@
 	<SDL2/SDL_mixer.h>
 	"theGame.h"
 
-1485616842 source:/home/zeusko/Desktop/c/UltraGame/functions.c
+1485876535 source:/home/zeusko/Desktop/c/UltraGame/functions.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>

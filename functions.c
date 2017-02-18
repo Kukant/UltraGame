@@ -29,9 +29,6 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                         case SDL_SCANCODE_W:
                             p_action->up = true;
                             break;
-                        /*case SDL_SCANCODE_S:
-                            p_action->down = true;
-                            break;*/
 
                         case SDL_SCANCODE_D:
                             p_action->right = true;
@@ -49,10 +46,6 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                         case SDL_SCANCODE_UP:
                             p_action->up2 = true;
                             break;
-
-                        /*case SDL_SCANCODE_DOWN:
-                            p_action->down2 = true;
-                            break;*/
 
                         case SDL_SCANCODE_RIGHT:
                             p_action->right2 = true;
@@ -99,10 +92,6 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                             p_action->up = false;
                             break;
 
-                        /*case SDL_SCANCODE_S:
-                            p_action->down = false;
-                            break;*/
-
                         case SDL_SCANCODE_D:
                             p_action->right = false;
                             break;
@@ -120,10 +109,6 @@ void eventsDetection(SDL_Event *event, Action *p_action, bool *running, gameStat
                         case SDL_SCANCODE_UP:
                             p_action->up2 = false;
                             break;
-
-                        /*case SDL_SCANCODE_DOWN:
-                            p_action->down2 = false;
-                            break;*/
 
                         case SDL_SCANCODE_RIGHT:
                             p_action->right2 = false;
@@ -395,7 +380,7 @@ void movingBullets(gameState *game)
             game->bullets[i].display = false;
             if(!game->gameIsOver)
             {
-                game->p_p1->hp--;
+                game->p_p1->hp -= 2;
                 game->lastHit = game->frames;
             }
         }
@@ -405,7 +390,7 @@ void movingBullets(gameState *game)
             game->bullets[i].display = false;
             if(!game->gameIsOver)
             {
-                game->p_p1->hp--;
+                game->p_p1->hp-= 2;
                 game->lastHit = game->frames;
             }
         }
@@ -415,7 +400,7 @@ void movingBullets(gameState *game)
             game->bullets[i].display = false;
             if(!game->gameIsOver)
             {
-                game->p_p2->hp--;
+                game->p_p2->hp-= 2;
                 game->lastHit = game->frames;
             }
         }
@@ -425,7 +410,7 @@ void movingBullets(gameState *game)
             game->bullets[i].display = false;
             if(!game->gameIsOver)
             {
-                game->p_p2->hp--;
+                game->p_p2->hp-= 2;
                 game->lastHit = game->frames;
             }
         }
